@@ -1,0 +1,30 @@
+<% content_for :title, "Refund ##{@refund.id}" %>
+
+<h1 class="mb-6 text-xl font-semibold">Refund #<%= @refund.id %></h1>
+
+<dl class="grid grid-cols-2 gap-y-4 rounded-lg border border-slate-200 bg-white p-6 text-sm sm:grid-cols-3">
+  <dt class="text-slate-500">Status</dt>
+  <dd class="col-span-2"><%= status_badge(@refund.status) %></dd>
+
+  <dt class="text-slate-500">Amount</dt>
+  <dd class="col-span-2 font-medium"><%= money(@refund.amount_cents) %></dd>
+
+  <dt class="text-slate-500">Charge</dt>
+  <dd class="col-span-2"><%= link_to @refund.charge.stripe_payment_intent_id, @refund.charge, class: "hover:underline" %></dd>
+
+  <dt class="text-slate-500">Idempotency key</dt>
+  <dd class="col-span-2 font-mono text-xs text-slate-600"><%= @refund.idempotency_key %></dd>
+
+  <dt class="text-slate-500">Stripe refund ID</dt>
+  <dd class="col-span-2 font-mono text-xs text-slate-600"><%= @refund.stripe_refund_id || "—" %></dd>
+
+  <% if @refund.failure_reason.present? %>
+    <dt class="text-slate-500">Failure reason</dt>
+    <dd class="col-span-2 text-rose-700"><%= @refund.failure_reason %></dd>
+  <% end %>
+
+  <dt class="text-slate-500">Created</dt>
+  <dd class="col-span-2 text-slate-600"><%= @refund.created_at.strftime("%b %-d, %Y %H:%M") %></dd>
+</dl>
+
+<%= link_to "← Back to refunds", refunds_path, class: "mt-6 inline-block text-sm text-slate-600 hover:underline" %>

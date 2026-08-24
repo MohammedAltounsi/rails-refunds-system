@@ -1,0 +1,50 @@
+<% content_for :title, "Ledger" %>
+
+<h1 class="mb-6 text-xl font-semibold">Ledger</h1>
+
+<p class="mb-6 rounded-md border border-slate-200 bg-white px-4 py-3 text-sm">
+  Global sum across every posting, ever:
+  <span class="font-mono font-semibold <%= @global_sum.zero? ? 'text-emerald-700' : 'text-rose-700' %>">
+    <%= money(@global_sum) %>
+  </span>
+  — money is only ever moved, never created or destroyed.
+</p>
+
+<h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Accounts</h2>
+<div class="mb-8 overflow-hidden rounded-lg border border-slate-200 bg-white">
+  <table class="w-full text-left text-sm">
+    <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+      <tr><th class="px-4 py-3">Account</th><th class="px-4 py-3">Balance</th></tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @accounts.each do |account| %>
+        <tr>
+          <td class="px-4 py-3 font-mono text-xs"><%= account.name %></td>
+          <td class="px-4 py-3"><%= money(account.balance_cents) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Recent entries</h2>
+<div class="overflow-hidden rounded-lg border border-slate-200 bg-white">
+  <table class="w-full text-left text-sm">
+    <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+      <tr><th class="px-4 py-3">Memo</th><th class="px-4 py-3">Postings</th><th class="px-4 py-3">When</th></tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @entries.each do |entry| %>
+        <tr>
+          <td class="px-4 py-3"><%= entry.memo %></td>
+          <td class="px-4 py-3 font-mono text-xs">
+            <% entry.postings.each do |p| %>
+              <div><%= p.account.name %>: <%= money(p.amount_cents) %></div>
+            <% end %>
+          </td>
+          <td class="px-4 py-3 text-slate-500"><%= entry.created_at.strftime("%b %-d, %H:%M") %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

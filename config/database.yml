@@ -1,0 +1,45 @@
+# SQLite. Versions 3.8.0 and up are supported.
+#   gem install sqlite3
+#
+#   Ensure the SQLite 3 gem is defined in your Gemfile
+#   gem "sqlite3"
+#
+default: &default
+  adapter: sqlite3
+  max_connections: <%= [ ENV.fetch("RAILS_MAX_THREADS") { 5 }.to_i, 5 ].max %>
+  timeout: 5000
+
+development:
+  <<: *default
+  database: storage/development.sqlite3
+
+# Test is SQLite locally for speed. When DATABASE_URL is set (CI), it runs on
+# PostgreSQL instead, so the Postgres-only guarantees (the deferred balance and
+# over-refund triggers) are actually exercised, not skipped as on SQLite.
+test:
+<% if ENV["DATABASE_URL"].to_s != "" %>
+  adapter: postgresql
+  url: <%= ENV["DATABASE_URL"] %>
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+<% else %>
+  <<: *default
+  database: storage/test.sqlite3
+<% end %>
+
+# Production: the ledger (primary) lives in PostgreSQL — a real payments store,
+# durable across deploys, and where the DB-level triggers are enforced (see
+# lib/tasks/db_constraints.rake). Cache/cable stay on SQLite; they hold no
+# money and are fine to reset with the container.
+production:
+  primary:
+    adapter: postgresql
+    url: <%= ENV["DATABASE_URL"] %>
+    pool: <%= [ ENV.fetch("RAILS_MAX_THREADS") { 5 }.to_i, 5 ].max %>
+  cache:
+    <<: *default
+    database: storage/production_cache.sqlite3
+    migrations_paths: db/cache_migrate
+  cable:
+    <<: *default
+    database: storage/production_cable.sqlite3
+    migrations_paths: db/cable_migrate

@@ -1,0 +1,36 @@
+<% content_for :title, "Issue a refund" %>
+
+<h1 class="mb-6 text-xl font-semibold">Issue a refund</h1>
+
+<% charge = @charge %>
+<%= form_with url: refunds_path, method: :post, class: "space-y-5 rounded-lg border border-slate-200 bg-white p-6" do %>
+  <div>
+    <label class="mb-1 block text-sm font-medium text-slate-700" for="charge_id">Charge</label>
+    <select name="charge_id" id="charge_id" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+      <% @charges.each do |c| %>
+        <option value="<%= c.id %>" <%= "selected" if charge && c.id == charge.id %>>
+          <%= c.stripe_payment_intent_id %> — refundable <%= money(c.refundable_cents) %>
+        </option>
+      <% end %>
+    </select>
+  </div>
+
+  <div>
+    <label class="mb-1 block text-sm font-medium text-slate-700" for="amount_cents">Amount (halalas)</label>
+    <input type="number" name="amount_cents" id="amount_cents" min="1" required
+           class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+           value="<%= charge&.refundable_cents %>">
+  </div>
+
+  <div>
+    <label class="mb-1 block text-sm font-medium text-slate-700" for="idempotency_key">Idempotency key (optional)</label>
+    <input type="text" name="idempotency_key" id="idempotency_key"
+           class="w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-sm"
+           placeholder="a stable key from your own retry logic">
+    <p class="mt-1 text-xs text-slate-500">Leave blank to generate one. Submitting the same key twice issues the refund once.</p>
+  </div>
+
+  <button type="submit" class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
+    Issue refund
+  </button>
+<% end %>

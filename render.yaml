@@ -1,0 +1,37 @@
+# Render Blueprint — Refunds & Payouts Ledger (Rails 8 + PostgreSQL)
+# Web runs on Render; the Postgres database is hosted on Neon (free, persistent)
+# and passed in as DATABASE_URL. Deploy: push to GitHub, then New → Blueprint.
+services:
+  - type: web
+    name: rails-refunds-payouts-ledger
+    runtime: docker
+    plan: starter              # always-on (no cold starts) for the live showcase
+    region: frankfurt          # closest Render region to Saudi Arabia
+    healthCheckPath: /up
+    autoDeploy: true
+    envVars:
+      # Thruster listens on the port Render routes to.
+      - key: HTTP_PORT
+        value: 10000
+      # One Puma worker, 3 threads: fits the Starter instance's 512 MB (same
+      # lesson as project 1 — see gotchas below).
+      - key: WEB_CONCURRENCY
+        value: 1
+      - key: RAILS_MAX_THREADS
+        value: 3
+      # jemalloc: reclaim freed pages to the OS quickly and cap arenas, so RSS
+      # stays flat instead of climbing to the 512 MB ceiling over time.
+      - key: MALLOC_CONF
+        value: narenas:2,background_thread:true,dirty_decay_ms:1000,muzzy_decay_ms:0
+      # Public host, no protocol (set to the onrender.com URL).
+      - key: APP_HOST
+        sync: false
+      # --- Secrets: set these in the Render dashboard (sync:false = not in git) ---
+      - key: RAILS_MASTER_KEY          # value of config/master.key
+        sync: false
+      - key: DATABASE_URL              # Neon connection string (…?sslmode=require)
+        sync: false
+      - key: STRIPE_SECRET_KEY         # sk_test_…
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET     # whsec_… from the DASHBOARD webhook (not the CLI one)
+        sync: false

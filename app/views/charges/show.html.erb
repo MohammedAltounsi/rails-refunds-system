@@ -1,0 +1,42 @@
+<% content_for :title, @charge.stripe_payment_intent_id %>
+
+<div class="mb-6 flex items-center justify-between">
+  <h1 class="text-xl font-semibold font-mono"><%= @charge.stripe_payment_intent_id %></h1>
+  <%= link_to "Issue a refund", new_refund_path(charge_id: @charge.id), class: "rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
+</div>
+
+<dl class="mb-8 grid grid-cols-3 gap-y-4 rounded-lg border border-slate-200 bg-white p-6 text-sm">
+  <dt class="text-slate-500">Captured</dt>
+  <dd class="col-span-2 font-medium"><%= money(@charge.amount_cents) %></dd>
+
+  <dt class="text-slate-500">Refunded</dt>
+  <dd class="col-span-2"><%= money(@charge.refunded_cents) %></dd>
+
+  <dt class="text-slate-500">Refundable</dt>
+  <dd class="col-span-2 font-medium"><%= money(@charge.refundable_cents) %></dd>
+</dl>
+
+<h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Refunds</h2>
+<div class="overflow-hidden rounded-lg border border-slate-200 bg-white">
+  <table class="w-full text-left text-sm">
+    <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+      <tr>
+        <th class="px-4 py-3">ID</th>
+        <th class="px-4 py-3">Amount</th>
+        <th class="px-4 py-3">Status</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @refunds.each do |refund| %>
+        <tr>
+          <td class="px-4 py-3"><%= link_to "##{refund.id}", refund, class: "hover:underline" %></td>
+          <td class="px-4 py-3"><%= money(refund.amount_cents) %></td>
+          <td class="px-4 py-3"><%= status_badge(refund.status) %></td>
+        </tr>
+      <% end %>
+      <% if @refunds.empty? %>
+        <tr><td colspan="3" class="px-4 py-8 text-center text-slate-400">No refunds against this charge.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

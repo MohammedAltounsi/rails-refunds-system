@@ -1,0 +1,11 @@
+#!/bin/bash -e
+
+# On server start: prepare the DB, install the deferred triggers, then seed the
+# showcase (idempotent upserts, safe no-op after the first cold start).
+if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
+  ./bin/rails db:prepare
+  ./bin/rails db:ensure_constraints
+  ./bin/rails runner "Rails.application.load_seed"
+fi
+
+exec "${@}"

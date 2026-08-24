@@ -1,0 +1,29 @@
+<% content_for :title, "Charges" %>
+
+<h1 class="mb-6 text-xl font-semibold">Charges</h1>
+
+<div class="overflow-hidden rounded-lg border border-slate-200 bg-white">
+  <table class="w-full text-left text-sm">
+    <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+      <tr>
+        <th class="px-4 py-3">Payment intent</th>
+        <th class="px-4 py-3">Captured</th>
+        <th class="px-4 py-3">Refunded</th>
+        <th class="px-4 py-3">Refundable</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @charges.each do |charge| %>
+        <tr>
+          <td class="px-4 py-3"><%= link_to charge.stripe_payment_intent_id, charge, class: "font-mono text-xs text-slate-900 hover:underline" %></td>
+          <td class="px-4 py-3"><%= money(charge.amount_cents) %></td>
+          <td class="px-4 py-3"><%= money(charge.refunded_cents) %></td>
+          <td class="px-4 py-3 font-medium"><%= money(charge.refundable_cents) %></td>
+        </tr>
+      <% end %>
+      <% if @charges.empty? %>
+        <tr><td colspan="4" class="px-4 py-8 text-center text-slate-400">No charges yet.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

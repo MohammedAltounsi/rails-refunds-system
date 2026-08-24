@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  security:
+    name: Security scans
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_WITHOUT: production   # skip pg (needs libpq); scanners don't need it
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Brakeman (Rails static security analysis)
+        run: bundle exec brakeman -q -w2 --no-pager
+
+      - name: bundler-audit (known gem CVEs)
+        run: |
+          bundle exec bundle-audit update
+          bundle exec bundle-audit check
+
+  test:
+    name: Tests (PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: refunds_payouts_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      RAILS_ENV: test
+      # Runs the suite on Postgres so the deferred balance + over-refund
+      # triggers (Postgres-only) are actually exercised, not skipped as on SQLite.
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/refunds_payouts_test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install libpq (for the pg gem)
+        run: sudo apt-get update && sudo apt-get install -y libpq-dev
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Prepare the test database and install DB constraints
+        run: |
+          bin/rails db:test:prepare
+          bin/rails db:ensure_constraints
+
+      - name: Run tests
+        run: bin/rails test
