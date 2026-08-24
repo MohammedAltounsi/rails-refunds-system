@@ -57,6 +57,7 @@ flowchart LR
    database enforces it independently of the app.
 
 For the reasoning behind each decision, see [ARCHITECTURE.md](ARCHITECTURE.md).
+For what to do when reconciliation reports drift, see [RUNBOOK.md](RUNBOOK.md).
 
 ## Run it
 
