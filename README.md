@@ -4,7 +4,7 @@
 
 The outbound half of a payments system: a refund state machine, idempotent
 reversals, and a double-entry ledger that stays balanced through partial
-refunds — built in Rails 8.
+refunds. Built in Rails 8.
 
 [![CI](https://github.com/MohammedAltounsi/rails-refunds-system/actions/workflows/ci.yml/badge.svg)](https://github.com/MohammedAltounsi/rails-refunds-system/actions/workflows/ci.yml)
 ![Ruby](https://img.shields.io/badge/Ruby-4.0-CC342D?logo=ruby&logoColor=white)
@@ -46,18 +46,19 @@ flowchart LR
 ```
 
 1. `Refund.request!` locks the charge, checks the remaining refundable amount,
-   and creates the refund row — idempotent on a caller-supplied key.
+   and creates the refund row, idempotent on a caller-supplied key.
 2. `RefundGateway` calls Stripe. The refund moves to `processing`. A
    synchronous Stripe error fails it immediately; nothing is booked either way.
 3. Stripe's `refund.updated` webhook (signature-verified, deduped through the
    inbox) is the only thing that calls `Refund#settle!`, which flips the
    status to `settled` and posts the balancing reversal in one transaction.
 4. A redelivered webhook, a retried request, or a double-click all resolve to
-   money moving exactly once — the idempotency keys guarantee it, and the
+   money moving exactly once. The idempotency keys guarantee it, and the
    database enforces it independently of the app.
 
 For the reasoning behind each decision, see [ARCHITECTURE.md](ARCHITECTURE.md).
 For what to do when reconciliation reports drift, see [RUNBOOK.md](RUNBOOK.md).
+For every route this app exposes, see [API.md](API.md).
 
 ## Run it
 

@@ -1,0 +1,15 @@
+name: Feature request
+description: Propose something this project doesn't do yet.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's missing, and why it matters
+    validations:
+      required: true
+  - type: textarea
+    id: approach
+    attributes:
+      label: Suggested approach
+      description: Optional. If it touches the money path, sketch which invariant needs protecting.

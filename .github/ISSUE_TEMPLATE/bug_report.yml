@@ -1,0 +1,28 @@
+name: Bug report
+description: Something in the refund state machine, ledger, or reconciliation doesn't behave as documented.
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Exact steps, including request params or console commands if relevant.
+    validations:
+      required: true
+  - type: input
+    id: invariant
+    attributes:
+      label: Which invariant does this break, if any
+      description: "e.g. \"a settled refund reversed the ledger twice\" or \"an over-refund was accepted\". Leave blank if it's not a money-correctness bug."
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or output
+      render: shell
