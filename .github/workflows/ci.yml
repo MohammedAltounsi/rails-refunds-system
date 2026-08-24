@@ -12,7 +12,7 @@ jobs:
     env:
       BUNDLE_WITHOUT: production   # skip pg (needs libpq); scanners don't need it
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -50,7 +50,7 @@ jobs:
       # triggers (Postgres-only) are actually exercised, not skipped as on SQLite.
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/refunds_payouts_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install libpq (for the pg gem)
         run: sudo apt-get update && sudo apt-get install -y libpq-dev
