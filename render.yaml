@@ -3,7 +3,7 @@
 # and passed in as DATABASE_URL. Deploy: push to GitHub, then New → Blueprint.
 services:
   - type: web
-    name: rails-refunds-payouts-ledger
+    name: rails-refunds-system
     runtime: docker
     plan: starter              # always-on (no cold starts) for the live showcase
     region: frankfurt          # closest Render region to Saudi Arabia

@@ -6,7 +6,7 @@ The outbound half of a payments system: a refund state machine, idempotent
 reversals, and a double-entry ledger that stays balanced through partial
 refunds — built in Rails 8.
 
-[![CI](https://github.com/MohammedAltounsi/rails-refunds-payouts-ledger/actions/workflows/ci.yml/badge.svg)](https://github.com/MohammedAltounsi/rails-refunds-payouts-ledger/actions/workflows/ci.yml)
+[![CI](https://github.com/MohammedAltounsi/rails-refunds-system/actions/workflows/ci.yml/badge.svg)](https://github.com/MohammedAltounsi/rails-refunds-system/actions/workflows/ci.yml)
 ![Ruby](https://img.shields.io/badge/Ruby-4.0-CC342D?logo=ruby&logoColor=white)
 ![Rails](https://img.shields.io/badge/Rails-8.1-CC0000?logo=rubyonrails&logoColor=white)
 ![Stripe](https://img.shields.io/badge/Stripe-test%20mode-635BFF?logo=stripe&logoColor=white)
