@@ -52,7 +52,7 @@ Rails.application.configure do
   # :async is the lightest adapter and needs no separate worker process/memory.
   config.active_job.queue_adapter = :async
 
-  # No outgoing mail in this app — skip SMTP configuration entirely.
+  # No outgoing mail in this app, so skip SMTP configuration entirely.
   config.action_mailer.perform_deliveries = false
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to

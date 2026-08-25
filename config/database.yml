@@ -15,7 +15,7 @@ development:
 
 # Test is SQLite locally for speed. When DATABASE_URL is set (CI), it runs on
 # PostgreSQL instead, so the Postgres-only guarantees (the deferred balance and
-# over-refund triggers) are actually exercised, not skipped as on SQLite.
+# over-refund triggers) run for real. On SQLite they are skipped.
 test:
 <% if ENV["DATABASE_URL"].to_s != "" %>
   adapter: postgresql
@@ -26,7 +26,7 @@ test:
   database: storage/test.sqlite3
 <% end %>
 
-# Production: the ledger (primary) lives in PostgreSQL — a real payments store,
+# Production: the ledger (primary) lives in PostgreSQL, a real payments store,
 # durable across deploys, and where the DB-level triggers are enforced (see
 # lib/tasks/db_constraints.rake). Cache/cable stay on SQLite; they hold no
 # money and are fine to reset with the container.

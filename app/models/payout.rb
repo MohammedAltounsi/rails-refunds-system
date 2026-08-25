@@ -1,6 +1,6 @@
 # A payout's life: requested -> processing -> paid | failed. Money leaves the
 # ledger to a payee (a vendor, a marketplace seller) only at `paid`, and only
-# via a verified Stripe webhook — the same discipline as a refund, in the other
+# via a verified Stripe webhook. Same discipline as a refund, in the other
 # direction. Requesting a payout accrues the liability (we now owe it); paying
 # it disburses the cash and clears the liability.
 class Payout < ApplicationRecord
@@ -20,7 +20,7 @@ class Payout < ApplicationRecord
 
   # The only way to create a payout. Idempotent on the caller's key. Accrues the
   # liability in the same transaction the row is created, so the books always
-  # show what we owe the moment a payout exists — never a payout with no
+  # show what we owe the moment a payout exists, never a payout with no
   # matching liability.
   def self.request!(payee:, amount_cents:, idempotency_key:)
     return find_by!(idempotency_key: idempotency_key) if exists?(idempotency_key: idempotency_key)

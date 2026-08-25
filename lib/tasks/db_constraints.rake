@@ -1,9 +1,9 @@
 namespace :db do
-  desc "Install DB-level integrity guarantees (PostgreSQL only). Idempotent — safe on every boot."
+  desc "Install DB-level integrity guarantees (PostgreSQL only). Idempotent, safe on every boot."
   task ensure_constraints: :environment do
     conn = ActiveRecord::Base.connection
     unless conn.adapter_name.match?(/postg/i)
-      puts "db:ensure_constraints — skipped (#{conn.adapter_name}, not PostgreSQL)."
+      puts "db:ensure_constraints: skipped (#{conn.adapter_name}, not PostgreSQL)."
       next
     end
 
@@ -64,6 +64,6 @@ namespace :db do
         FOR EACH ROW EXECUTE FUNCTION refunds_cannot_exceed_charge();
     SQL
 
-    puts "db:ensure_constraints — installed: postings must balance per entry + refunds cannot exceed their charge (deferred triggers)."
+    puts "db:ensure_constraints installed: postings must balance per entry, refunds cannot exceed their charge (deferred triggers)."
   end
 end

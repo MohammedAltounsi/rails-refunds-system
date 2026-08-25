@@ -2,7 +2,7 @@
 # middleware via a Railtie, so configuring it here is enough.
 #
 # Counters live in a process-local memory store, which is correct ONLY because
-# the deploy runs a single Puma worker (WEB_CONCURRENCY=1, see render.yaml — the
+# the deploy runs a single Puma worker (WEB_CONCURRENCY=1, see render.yaml; the
 # 512 MB Starter instance can't hold more). With one process the count is global.
 # ponytail: per-process store, single worker. If WEB_CONCURRENCY ever rises,
 # back this with a shared store (Redis or solid_cache) or the limit multiplies

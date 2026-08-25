@@ -39,8 +39,8 @@ data integrity incident, not routine drift:
 
 ### Orphan: a settled reversal with no matching Stripe refund
 
-The scary one: money left the books with nothing on Stripe's side to back
-it. Treat as a security incident first, bug second:
+Money left the books with nothing on Stripe's side to back it. Treat it as a
+security incident first, a bug second:
 
 1. Freeze further refund issuance (comment out the route or set
    `Rack::Attack` to block `/refunds` POSTs) until understood.
@@ -84,6 +84,5 @@ curl -b cookies.txt -X POST https://<app>.onrender.com/refunds \
 ```
 
 Reuse the same `idempotency_key` on a retry. It returns the existing refund
-instead of issuing a second one. A real support tool would put this behind
-its own authenticated API, not a scraped form token; this is a demo-scale
-substitute for that.
+instead of issuing a second one. A real support tool would put this behind its
+own authenticated API. This scraped form token is a demo-scale substitute.

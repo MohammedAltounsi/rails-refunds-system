@@ -4,7 +4,7 @@ class ReconciliationController < ApplicationController
   # result: at most one Stripe scan every 5 minutes no matter the traffic.
   # rack-attack throttles the endpoint on top of this.
   def show
-    # On a cache miss, run reconciliation and persist the run — so even without
+    # On a cache miss, run reconciliation and persist the run, so even without
     # the scheduled ReconcileJob the page builds a visible history of checks.
     @result = Rails.cache.fetch("reconciliation:v1", expires_in: 5.minutes) do
       ReconciliationService.run.tap { |r| ReconciliationRun.record!(r) }

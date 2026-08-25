@@ -1,9 +1,9 @@
-# Design system — "The Desk"
+# Design system: "The Desk"
 
 A dark payments terminal. Money is data on a trading desk: monospace figures in
-ruled columns on a near-black console, one live green for credit, amber for
-in-flight, red for what reverses. The look refuses the dashboard-of-cards and the
-metric-tile hero; it reads as an instrument an operator watches, not a report.
+ruled columns on a near-black console, green for credit, amber for in-flight, red
+for what reverses. It uses no dashboard cards and no metric-tile hero. It looks
+like an instrument an operator watches.
 
 Recorded from the built UI (`app/assets/tailwind/application.css`, `app/views/**`).
 
@@ -27,30 +27,29 @@ Tokens are Tailwind v4 `@theme` variables; utilities follow (`bg-bg`, `text-ink`
 | `debit` | `#ff6058` | failed, reversal, drift, negative |
 
 Money is colored by sign: positive `credit`, negative `debit`, zero `ink`
-(`ApplicationHelper#amount`). Color strategy: Restrained — a near-black ground
-with one live accent that owns the money semantics.
+(`ApplicationHelper#amount`). The color strategy is restrained: a near-black
+ground with one accent that owns the money semantics.
 
 ## Type
 
 - **JetBrains Mono** carries every figure, id, account name, status chip, nav
-  tab, column header, and page title. This is data and measurement, not a
-  costume: the terminal's whole chrome is monospace.
+  tab, column header, and page title. The terminal's whole chrome is monospace.
 - **Archivo** carries descriptive sentences and form inputs.
 - Figures use `font-variant-numeric: tabular-nums` so columns align.
 - Page titles: `.desk-title` (mono, 500, lowercase, slight positive tracking).
 
 ## Components
 
-- `.panel` — the card. 1px `line` border, 12px radius, **no shadow**; elevation
-  is declared once, as the border.
-- `.chip` — status with a leading state dot; `chip-requested|processing|settled|failed`.
-- `.btn-primary` — filled `credit` on dark ink text; `.btn-ghost` — 1px border,
+- `.panel`: the card. 1px `line` border, 12px radius, no shadow. Elevation is the
+  border.
+- `.chip`: status with a leading state dot. `chip-requested|processing|settled|failed`.
+- `.btn-primary`: filled `credit` on dark ink text. `.btn-ghost`: 1px border,
   hovers to `credit`.
-- `.field` — dark input, `credit` focus ring.
-- `.ledger-table` — mono uppercase headers, hairline rows, `panel-raise` hover.
-- `.readout` — a right-aligned mono value against a dim label; replaces
+- `.field`: dark input, `credit` focus ring.
+- `.ledger-table`: mono uppercase headers, hairline rows, `panel-raise` hover.
+- `.readout`: a right-aligned mono value against a dim label. Replaces
   metric-tile cards for summaries (charge totals, reconciliation counts).
-- `.meta` — a mono micro-label for fields and section titles. **Not** a kicker:
+- `.meta`: a mono micro-label for fields and section titles. It is not a kicker;
   there are no eyebrow labels above page headings.
 
 ## Motion
@@ -63,8 +62,7 @@ masthead's blinking terminal **caret**. Both respect `prefers-reduced-motion`.
 
 - No eyebrow kickers, no gradient text, no glass decoration, no colored
   `border-left`, no metric-tile hero, no hard offset shadows.
-- Dark chosen from the use scene (an operator watching money move on a console),
-  not from category habit.
+- Dark chosen from the use scene: an operator watching money move on a console.
 - Fonts self-served from Google Fonts; CSP allowlists `fonts.googleapis.com` /
   `fonts.gstatic.com`.
 

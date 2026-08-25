@@ -1,6 +1,6 @@
 # The one place that issues a refund. Ties together the app-level cap check
-# (Refund.request!), the Stripe API call, and the transition into "processing"
-# — or straight to "failed" if Stripe rejects the request synchronously.
+# (Refund.request!), the Stripe API call, and the transition into "processing",
+# or straight to "failed" if Stripe rejects the request synchronously.
 module RefundService
   def self.issue!(charge:, amount_cents:, idempotency_key:)
     refund = Refund.request!(charge: charge, amount_cents: amount_cents, idempotency_key: idempotency_key)

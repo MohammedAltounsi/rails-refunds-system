@@ -1,7 +1,7 @@
 # Continuous reconciliation: run the ledger-vs-Stripe check and persist the
 # result as a ReconciliationRun. Scheduled (a cron on Render, or via
-# `rails reconcile`). Storing every run gives the safety net a timeline —
-# when drift first appeared, not just that it exists now.
+# `rails reconcile`). Storing every run builds a timeline of drift, so we
+# can see when it first appeared.
 class ReconcileJob < ApplicationJob
   queue_as :default
 

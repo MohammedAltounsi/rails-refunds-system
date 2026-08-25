@@ -6,7 +6,7 @@
 #               (a dropped webhook). We owe our books a reversal.
 #   mismatched  We settled a different amount than Stripe actually refunded.
 #   orphan      Our ledger settled a refund with NO matching succeeded
-#               refund on Stripe. (the scary one — money leaving from nowhere.)
+#               refund on Stripe (money booked out with nothing behind it).
 #
 # Plus two internal invariants that must always hold:
 #   - every entry balances (its postings sum to zero)
@@ -18,7 +18,7 @@ module ReconciliationService
     keyword_init: true
   ) do
     # Structurally clean AND matched against Stripe. If Stripe was unreachable
-    # we cannot assert either way, so it is neither ok nor drift — see unreachable?.
+    # we cannot assert either way, so it is neither ok nor drift (see unreachable?).
     def ok?
       stripe_reachable && drift_free? && invariants_hold?
     end
@@ -54,8 +54,8 @@ module ReconciliationService
       if refund.nil?
         missing << { stripe_refund_id: id, amount_cents: info[:amount] }
       elsif posted_amount_for(refund) != info[:amount]
-        # Compare the amount actually POSTED to the ledger, not just the
-        # refund's requested amount — that is what really moved money.
+        # Compare the amount actually POSTED to the ledger. That is what really
+        # moved money; the refund's requested amount can differ.
         mismatched << { stripe_refund_id: id, stripe_cents: info[:amount], ledger_cents: posted_amount_for(refund) }
       else
         matched += 1
@@ -69,7 +69,7 @@ module ReconciliationService
             { stripe_refund_id: id, refund_id: refund.id, ledger_cents: refund.amount_cents }
           end
         # A settled refund with NO stripe_refund_id cannot be matched to Stripe
-        # at all — invisible to the loop above. Surface it as an orphan too.
+        # at all, so the loop above never sees it. Surface it as an orphan too.
         null_id_orphans =
           Refund.where(status: "settled", stripe_refund_id: nil).map do |refund|
             { stripe_refund_id: nil, refund_id: refund.id, ledger_cents: refund.amount_cents }

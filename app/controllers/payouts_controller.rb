@@ -13,7 +13,7 @@ class PayoutsController < ApplicationController
   end
 
   # Issues a payout. The idempotency key comes from the client so a double-click
-  # or a retried request pays out once — Payout.request! is keyed on it.
+  # or a retried request pays out once. Payout.request! is keyed on it.
   def create
     payout = PayoutService.issue!(
       payee: params[:payee].to_s.strip,
@@ -38,12 +38,12 @@ class PayoutsController < ApplicationController
     when "paid"
       payout.apply_stripe_paid!(stripe_payout_id: payout.stripe_payout_id || "po_demo_#{payout.id}")
       AuditLog.record!(actor: "demo (simulated webhook)", action: "payout.webhook.paid", subject: payout,
-                       detail: "paid #{helpers.money(payout.amount_cents)} to #{payout.payee} — disbursement booked")
+                       detail: "paid #{helpers.money(payout.amount_cents)} to #{payout.payee}, disbursement booked")
       redirect_to payout, notice: "Played Stripe's webhook: paid. The disbursement is on the ledger."
     when "failed"
       payout.apply_stripe_failed!("demo: simulated Stripe failure")
       AuditLog.record!(actor: "demo (simulated webhook)", action: "payout.webhook.failed", subject: payout,
-                       detail: "marked failed — no cash disbursed; the accrued liability stands")
+                       detail: "marked failed, no cash disbursed; the accrued liability stands")
       redirect_to payout, notice: "Played Stripe's webhook: failed. No cash was disbursed; the accrued liability stays on the books."
     else
       redirect_to payout, alert: "Pick an outcome to simulate."

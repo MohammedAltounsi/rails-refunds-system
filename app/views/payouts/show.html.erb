@@ -23,7 +23,7 @@
     </div>
     <div class="readout px-6">
       <dt class="meta">stripe payout id</dt>
-      <dd class="font-mono text-xs text-ink-dim"><%= @payout.stripe_payout_id || "—" %></dd>
+      <dd class="font-mono text-xs text-ink-dim"><%= @payout.stripe_payout_id || "none" %></dd>
     </div>
     <% if @payout.failure_reason.present? %>
       <div class="readout px-6">

@@ -1,6 +1,6 @@
 class AccountsController < ApplicationController
-  # The internal ledger view — every account, its derived balance, and the most
-  # recent entries. This is the transparency layer: proof that money only moves.
+  # The internal ledger view: every account, its derived balance, and the most
+  # recent entries. This is the transparency layer, proof that money only moves.
   def index
     @accounts   = Account.order(:name)
     @global_sum = Posting.sum(:amount_cents)

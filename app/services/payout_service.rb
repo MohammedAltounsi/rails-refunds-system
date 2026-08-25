@@ -2,7 +2,7 @@
 # and hands the payout to the processor.
 #
 # Real Stripe payouts need a Connect balance, which is out of scope for this
-# showcase the same way the inbound capture is (see Charge — a captured payment
+# showcase the same way the inbound capture is (see Charge; a captured payment
 # is owned here as a fact). The disbursement is booked only when a verified
 # `payout.paid` webhook confirms it, exactly like a refund settles.
 module PayoutService

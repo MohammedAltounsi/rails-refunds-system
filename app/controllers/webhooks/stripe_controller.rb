@@ -1,6 +1,6 @@
 module Webhooks
   class StripeController < ApplicationController
-    # Stripe posts here from its own servers — no browser, no CSRF token to check.
+    # Stripe posts here from its own servers. No browser, no CSRF token to check.
     skip_forgery_protection
 
     def create
@@ -29,7 +29,7 @@ module Webhooks
 
       head :ok
     rescue Stripe::SignatureVerificationError, JSON::ParserError
-      head :bad_request   # forged or malformed — refuse it, move no money
+      head :bad_request   # forged or malformed: refuse it, move no money
     rescue => e
       # Processing failed after the event was recorded. Mark it and return 500
       # so Stripe redelivers; on that retry the inbox row is unprocessed, so

@@ -1,6 +1,6 @@
 # Recovery sweep: re-run any inbox event still stuck in `received` or `failed`
-# past a grace window. This auto-heals a settlement dropped by a crash between
-# recording the event and booking the money — the exact "flagged but never
+# past a grace window. This recovers a settlement dropped by a crash between
+# recording the event and booking the money, the exact "flagged but never
 # recovers" gap. Handlers are idempotent, so replaying an event books once.
 #
 # Scheduled (a cron on Render, or invoked via `rails stripe:reprocess`).
