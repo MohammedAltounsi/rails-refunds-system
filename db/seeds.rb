@@ -24,4 +24,22 @@ seed_refund(charges[0], 15_00, "seed-refund-1", final_status: "settled", stripe_
 seed_refund(charges[1], 40_00, "seed-refund-2", final_status: nil,       stripe_id: "re_seed_2") # stays "processing"
 seed_refund(charges[2], 30_00, "seed-refund-3", final_status: "failed",  stripe_id: "re_seed_3")
 
-puts "Seeded #{Charge.count} charges and #{Refund.count} refunds."
+# One paid payout, one still processing, one failed — every payout state on the
+# page without hitting Stripe. Idempotent: request!/pay! are keyed.
+def seed_payout(payee, amount_cents, key, final_status:, stripe_id:)
+  payout = Payout.request!(payee: payee, amount_cents: amount_cents, idempotency_key: key)
+  return payout unless payout.status == "requested"
+
+  payout.mark_processing!(stripe_payout_id: stripe_id)
+  case final_status
+  when "paid"   then payout.pay!
+  when "failed" then payout.fail!("seed: destination bank rejected the transfer")
+  end
+  payout
+end
+
+seed_payout("Rahal Coffee",   80_00, "seed-payout-1", final_status: "paid",   stripe_id: "po_seed_1")
+seed_payout("Najd Roasters",  45_00, "seed-payout-2", final_status: nil,      stripe_id: "po_seed_2") # stays "processing"
+seed_payout("Hijazi Beans",   20_00, "seed-payout-3", final_status: "failed", stripe_id: "po_seed_3")
+
+puts "Seeded #{Charge.count} charges, #{Refund.count} refunds, #{Payout.count} payouts."

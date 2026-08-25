@@ -19,10 +19,12 @@ module Webhooks
       inbox = StripeEvent.record(event, payload)
       return head :ok if inbox.processed?
 
-      # 3. Money is real ONLY on a refund that Stripe reports as settled. The
-      #    handlers are themselves idempotent (keyed on the refund id), so
-      #    even a retry after a mid-processing crash reverses money once.
-      handle(event)
+      # 3. Money is real ONLY on a refund/payout that Stripe reports terminal.
+      #    Handlers are convergent and idempotent (keyed ledger postings), so a
+      #    retry after a mid-processing crash books money once. Kept synchronous
+      #    on purpose: Stripe's own retry (on the 500 below) is the durable
+      #    backstop, and the recovery sweep re-runs anything still unprocessed.
+      StripeEventProcessor.process(event)
       inbox.mark_processed!
 
       head :ok
@@ -31,44 +33,11 @@ module Webhooks
     rescue => e
       # Processing failed after the event was recorded. Mark it and return 500
       # so Stripe redelivers; on that retry the inbox row is unprocessed, so
-      # we run again, and the idempotent ledger keeps money exactly-once.
+      # we run again, and the idempotent ledger keeps money exactly-once. If
+      # Stripe stops retrying, ReprocessStuckStripeEventsJob picks it up.
       inbox&.mark_failed!(e.message)
       Rails.logger.error("stripe webhook #{event&.id} (#{event&.type}) failed: #{e.message}")
       head :internal_server_error
-    end
-
-    private
-
-    def handle(event)
-      case event.type
-      when "refund.updated" then handle_refund_updated(event.data.object)
-      when "refund.failed"  then handle_refund_failed(event.data.object)
-      end
-    end
-
-    # A refund we created has a status change. `succeeded` books the reversal,
-    # `failed` records why, anything else (e.g. "pending") is a no-op. These
-    # call the convergent, ordering-tolerant methods (not the strict FSM), so
-    # an out-of-order or redelivered event never raises into the 500 path.
-    def handle_refund_updated(stripe_refund)
-      refund = find_refund(stripe_refund)
-      return unless refund
-
-      case stripe_refund.status
-      when "succeeded" then refund.apply_stripe_succeeded!(stripe_refund_id: stripe_refund.id)
-      when "failed"    then refund.apply_stripe_failed!("stripe: #{stripe_refund.failure_reason}")
-      end
-    end
-
-    def handle_refund_failed(stripe_refund)
-      refund = find_refund(stripe_refund)
-      return unless refund
-      refund.apply_stripe_failed!("stripe: #{stripe_refund.failure_reason}")
-    end
-
-    def find_refund(stripe_refund)
-      Refund.find_by(id: stripe_refund.metadata["refund_id"]) ||
-        Refund.find_by(stripe_refund_id: stripe_refund.id)
     end
   end
 end

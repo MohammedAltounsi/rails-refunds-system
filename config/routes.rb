@@ -6,6 +6,7 @@ Rails.application.routes.draw do
 
   resources :charges, only: %i[index show]
   resources :refunds, only: %i[index show new create]
+  resources :payouts, only: %i[index show new create]
 
   get "ledger" => "accounts#index", as: :ledger
   get "reconciliation" => "reconciliation#show", as: :reconciliation

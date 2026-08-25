@@ -33,6 +33,7 @@
         </div>
         <nav class="flex items-center gap-7 pb-0 text-sm font-medium">
           <%= link_to "Refunds",        refunds_path,        class: "nav-link py-4", "aria-current": ("page" if current_page?(refunds_path) || current_page?(root_path)) %>
+          <%= link_to "Payouts",        payouts_path,        class: "nav-link py-4", "aria-current": ("page" if current_page?(payouts_path)) %>
           <%= link_to "Charges",        charges_path,        class: "nav-link py-4", "aria-current": ("page" if current_page?(charges_path)) %>
           <%= link_to "Ledger",         ledger_path,         class: "nav-link py-4", "aria-current": ("page" if current_page?(ledger_path)) %>
           <%= link_to "Reconciliation", reconciliation_path, class: "nav-link py-4", "aria-current": ("page" if current_page?(reconciliation_path)) %>

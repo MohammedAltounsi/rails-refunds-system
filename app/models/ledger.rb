@@ -1,7 +1,9 @@
 module Ledger
   # Named system accounts, so a typo can't silently open a second account.
-  CASH_ACCOUNT    = "stripe:cash"      # external money moving through Stripe (an asset source)
-  REVENUE_ACCOUNT = "revenue:charges"  # captured revenue that a refund gives back
+  CASH_ACCOUNT    = "stripe:cash"           # external money moving through Stripe (an asset source)
+  REVENUE_ACCOUNT = "revenue:charges"       # captured revenue that a refund gives back
+  PAYABLE_ACCOUNT = "liability:payouts"     # money owed to a payee, accrued then disbursed
+  EXPENSE_ACCOUNT = "expense:payouts"       # the cost recognised when a payout is accrued
 
   def self.account(name)
     Account.find_or_create_by!(name: name)

@@ -18,6 +18,7 @@ module ApplicationHelper
     "requested"  => "chip-requested",
     "processing" => "chip-processing",
     "settled"    => "chip-settled",
+    "paid"       => "chip-settled",
     "failed"     => "chip-failed"
   }.freeze
 

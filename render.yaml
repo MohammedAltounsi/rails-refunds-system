@@ -35,3 +35,19 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET     # whsec_… from the DASHBOARD webhook (not the CLI one)
         sync: false
+
+# Continuous reconciliation + inbox recovery run on demand today (rake tasks,
+# and the reconciliation page records a run on each cache miss). To run them on
+# a schedule, add these Render cron services — note each cron is a separate
+# billable service, so they are left commented for the free/starter showcase:
+#
+#   - type: cron
+#     name: reconcile
+#     runtime: docker
+#     schedule: "*/15 * * * *"        # every 15 min: ledger vs Stripe, stored
+#     dockerCommand: bundle exec rails reconcile
+#   - type: cron
+#     name: reprocess-stuck-events
+#     runtime: docker
+#     schedule: "*/5 * * * *"         # every 5 min: heal any dropped settlement
+#     dockerCommand: bundle exec rails stripe:reprocess
