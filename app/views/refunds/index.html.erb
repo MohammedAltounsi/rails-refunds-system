@@ -24,7 +24,7 @@
         <li class="flex gap-3"><span class="font-mono text-xs text-credit">1</span><span><%= link_to "Issue a refund", new_refund_path, class: "text-ink underline decoration-line underline-offset-4 hover:text-credit" %> on any charge. It lands in <span class="font-mono text-xs text-pending">processing</span>, waiting on Stripe.</span></li>
         <li class="flex gap-3"><span class="font-mono text-xs text-credit">2</span><span>Open that refund and <span class="text-ink">play Stripe's webhook → settles</span>. That is the only thing that moves money.</span></li>
         <li class="flex gap-3"><span class="font-mono text-xs text-credit">3</span><span>Watch the reversal land on the <%= link_to "ledger", ledger_path, class: "text-ink underline decoration-line underline-offset-4 hover:text-credit" %>, colored by sign.</span></li>
-        <li class="flex gap-3"><span class="font-mono text-xs text-credit">4</span><span>Confirm <%= link_to "reconciliation", reconciliation_path, class: "text-ink underline decoration-line underline-offset-4 hover:text-credit" %> still agrees with Stripe to the halala.</span></li>
+        <li class="flex gap-3"><span class="font-mono text-xs text-credit">4</span><span>Open <%= link_to "reconciliation", reconciliation_path, class: "text-ink underline decoration-line underline-offset-4 hover:text-credit" %>: it proves every entry balances and the book sums to zero (and matches Stripe to the halala once real keys are wired).</span></li>
         <li class="flex gap-3"><span class="font-mono text-xs text-credit">5</span><span>Back on the settled refund, <span class="text-ink">replay the webhook</span>. The ledger stays booked exactly once.</span></li>
       </ol>
       <p class="mt-5 font-mono text-xs text-ink-faint">

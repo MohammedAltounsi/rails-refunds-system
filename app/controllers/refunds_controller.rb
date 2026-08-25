@@ -45,7 +45,7 @@ class RefundsController < ApplicationController
       refund.apply_stripe_succeeded!(stripe_refund_id: refund.stripe_refund_id || "re_demo_#{refund.id}")
       AuditLog.record!(actor: "demo (simulated webhook)", action: "refund.webhook.succeeded", subject: refund,
                        detail: "settled #{helpers.money(refund.amount_cents)} — reversal booked to the ledger")
-      redirect_to refund, notice: "Played Stripe's webhook: settled. The reversal is on the ledger; reconciliation stays clean."
+      redirect_to refund, notice: "Played Stripe's webhook: settled. The reversal is booked to the ledger, exactly once."
     when "failed"
       refund.apply_stripe_failed!("demo: simulated Stripe failure")
       AuditLog.record!(actor: "demo (simulated webhook)", action: "refund.webhook.failed", subject: refund,
