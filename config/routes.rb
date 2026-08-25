@@ -6,9 +6,14 @@ Rails.application.routes.draw do
 
   resources :charges, only: %i[index show]
   resources :refunds, only: %i[index show new create] do
-    member { post :replay }   # demo: re-deliver the settlement webhook, prove exactly-once
+    member do
+      post :replay     # demo: re-deliver the settlement webhook, prove exactly-once
+      post :simulate   # demo: play Stripe's webhook (?outcome=succeeded|failed)
+    end
   end
-  resources :payouts, only: %i[index show new create]
+  resources :payouts, only: %i[index show new create] do
+    member { post :simulate }   # demo: play Stripe's webhook (?outcome=paid|failed)
+  end
 
   namespace :api do
     resources :refunds, only: %i[create show]

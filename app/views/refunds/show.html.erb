@@ -37,6 +37,24 @@
     </div>
   </dl>
 
+  <% if demo_mode? && @refund.status == "processing" %>
+    <div class="panel mt-6 p-5">
+      <p class="meta mb-1">demo · play Stripe's webhook</p>
+      <p class="mb-4 text-xs text-ink-dim">
+        This refund is waiting on Stripe. In production only a signature-verified
+        webhook settles it. Here, stand in for Stripe and watch the ledger move:
+      </p>
+      <div class="flex flex-wrap items-center gap-3">
+        <%= button_to "▸ Stripe settles this", simulate_refund_path(@refund, outcome: "succeeded"), method: :post, class: "btn btn-primary" %>
+        <%= button_to "Stripe fails this", simulate_refund_path(@refund, outcome: "failed"), method: :post, class: "btn btn-ghost" %>
+      </div>
+      <p class="mt-3 font-mono text-xs text-ink-faint">
+        settling books the reversal → see it on the <%= link_to "ledger", ledger_path, class: "text-ink-dim hover:text-credit" %>,
+        then confirm <%= link_to "reconciliation", reconciliation_path, class: "text-ink-dim hover:text-credit" %> stays clean
+      </p>
+    </div>
+  <% end %>
+
   <% if @refund.status == "settled" %>
     <div class="mt-6 flex items-center gap-4">
       <%= button_to "replay settlement webhook", replay_refund_path(@refund), method: :post, class: "btn btn-ghost" %>

@@ -36,4 +36,22 @@
       <dd class="font-mono text-xs text-ink-dim"><%= @payout.created_at.strftime("%b %-d, %Y · %H:%M") %></dd>
     </div>
   </dl>
+
+  <% if demo_mode? && @payout.status == "processing" %>
+    <div class="panel mt-6 p-5">
+      <p class="meta mb-1">demo · play Stripe's webhook</p>
+      <p class="mb-4 text-xs text-ink-dim">
+        This payout is accrued and waiting on Stripe. In production only a
+        signed <span class="font-mono text-xs text-ink">payout.paid</span> webhook
+        disburses it. Here, stand in for Stripe:
+      </p>
+      <div class="flex flex-wrap items-center gap-3">
+        <%= button_to "▸ Stripe pays this", simulate_payout_path(@payout, outcome: "paid"), method: :post, class: "btn btn-primary" %>
+        <%= button_to "Stripe fails this", simulate_payout_path(@payout, outcome: "failed"), method: :post, class: "btn btn-ghost" %>
+      </div>
+      <p class="mt-3 font-mono text-xs text-ink-faint">
+        paying books the disbursement → see it on the <%= link_to "ledger", ledger_path, class: "text-ink-dim hover:text-credit" %>
+      </p>
+    </div>
+  <% end %>
 </div>

@@ -26,4 +26,27 @@ class PayoutsController < ApplicationController
   rescue ActiveRecord::RecordInvalid => e
     redirect_to new_payout_path, alert: e.message
   end
+
+  # Demo: play Stripe's `payout.paid` / `payout.failed` webhook so a visitor can
+  # drive a `processing` payout to its end state by clicking. Calls the same
+  # convergent methods a real webhook calls. Off in production (demo_mode? false).
+  def simulate
+    return redirect_to(payouts_path, alert: "Demo actions are disabled here.") unless demo_mode?
+
+    payout = Payout.find(params[:id])
+    case params[:outcome]
+    when "paid"
+      payout.apply_stripe_paid!(stripe_payout_id: payout.stripe_payout_id || "po_demo_#{payout.id}")
+      AuditLog.record!(actor: "demo (simulated webhook)", action: "payout.webhook.paid", subject: payout,
+                       detail: "paid #{helpers.money(payout.amount_cents)} to #{payout.payee} — disbursement booked")
+      redirect_to payout, notice: "Played Stripe's webhook: paid. The disbursement is on the ledger."
+    when "failed"
+      payout.apply_stripe_failed!("demo: simulated Stripe failure")
+      AuditLog.record!(actor: "demo (simulated webhook)", action: "payout.webhook.failed", subject: payout,
+                       detail: "marked failed — no cash disbursed; the accrued liability stands")
+      redirect_to payout, notice: "Played Stripe's webhook: failed. No cash was disbursed; the accrued liability stays on the books."
+    else
+      redirect_to payout, alert: "Pick an outcome to simulate."
+    end
+  end
 end
