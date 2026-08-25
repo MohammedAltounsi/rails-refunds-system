@@ -18,10 +18,9 @@ refunds. Built in Rails 8.
 Issue a refund, replay the settlement webhook, and watch the ledger stay
 balanced. No setup, no Stripe account, no real money.
 
-<!-- SCREENSHOT: replace this line with the ledger/refunds screenshot.
-     Capture https://rails-refunds-system.onrender.com , save to
-     docs/screenshot-ledger.png , then use:
-     ![Refunds & ledger](docs/screenshot-ledger.png) -->
+<br>
+
+<img src="docs/screenshot-ledger.png" alt="The double-entry ledger: every posting ever, summing to zero" width="820">
 
 </div>
 
