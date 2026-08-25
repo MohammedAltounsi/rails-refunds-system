@@ -165,13 +165,10 @@
     letter-spacing: 0.02em;
     color: var(--color-ink-faint);
     transition: color 0.15s ease;
-    position: relative;
+    border-bottom: 2px solid transparent;
   }
   .nav-link:hover { color: var(--color-ink-dim); }
-  .nav-link[aria-current="page"] { color: var(--color-ink); }
-  .nav-link[aria-current="page"]::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: -17px; height: 2px; background: var(--color-credit);
-  }
+  .nav-link[aria-current="page"] { color: var(--color-ink); border-bottom-color: var(--color-credit); }
 }
 
 /* staggered reveal: rows stream onto the desk once, from an already-legible default */
