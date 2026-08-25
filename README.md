@@ -6,11 +6,22 @@ The outbound half of a payments system: a refund state machine, idempotent
 reversals, and a double-entry ledger that stays balanced through partial
 refunds. Built in Rails 8.
 
+[![Live demo](https://img.shields.io/badge/Live_demo-online-2ea44f?logo=render&logoColor=white)](https://rails-refunds-system.onrender.com)
 [![CI](https://github.com/MohammedAltounsi/rails-refunds-system/actions/workflows/ci.yml/badge.svg)](https://github.com/MohammedAltounsi/rails-refunds-system/actions/workflows/ci.yml)
 ![Ruby](https://img.shields.io/badge/Ruby-4.0-CC342D?logo=ruby&logoColor=white)
 ![Rails](https://img.shields.io/badge/Rails-8.1-CC0000?logo=rubyonrails&logoColor=white)
 ![Stripe](https://img.shields.io/badge/Stripe-test%20mode-635BFF?logo=stripe&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-informational)
+
+### [▶ Open the live demo](https://rails-refunds-system.onrender.com)
+
+Issue a refund, replay the settlement webhook, and watch the ledger stay
+balanced. No setup, no Stripe account, no real money.
+
+<!-- SCREENSHOT: replace this line with the ledger/refunds screenshot.
+     Capture https://rails-refunds-system.onrender.com , save to
+     docs/screenshot-ledger.png , then use:
+     ![Refunds & ledger](docs/screenshot-ledger.png) -->
 
 </div>
 
@@ -65,6 +76,10 @@ For what to do when reconciliation reports drift, see [RUNBOOK.md](RUNBOOK.md).
 For every route this app exposes, see [API.md](API.md).
 
 ## Run it
+
+The fastest way to see it work is the **[live demo](https://rails-refunds-system.onrender.com)** —
+it runs the full refund flow in the browser and replays webhooks for you, no
+install. To run it locally against real Stripe test webhooks:
 
 Needs Ruby 4.0+, the [Stripe CLI](https://stripe.com/docs/stripe-cli), and a Stripe test account.
 
