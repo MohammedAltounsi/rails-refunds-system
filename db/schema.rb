@@ -10,12 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_25_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_25_120200) do
   create_table "accounts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_accounts_on_name", unique: true
+  end
+
+  create_table "audit_logs", force: :cascade do |t|
+    t.string "action", null: false
+    t.string "actor", null: false
+    t.datetime "created_at", null: false
+    t.string "detail"
+    t.integer "subject_id"
+    t.string "subject_type"
+    t.index ["created_at"], name: "index_audit_logs_on_created_at"
+    t.index ["subject_type", "subject_id"], name: "index_audit_logs_on_subject_type_and_subject_id"
   end
 
   create_table "charges", force: :cascade do |t|

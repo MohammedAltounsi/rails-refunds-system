@@ -1,0 +1,35 @@
+<% content_for :title, "Audit trail" %>
+
+<div class="rise">
+  <div class="mb-10">
+    <p class="eyebrow mb-2.5">Who did what</p>
+    <h1 class="font-display text-4xl tracking-tight text-ink">Audit trail</h1>
+    <p class="mt-2 max-w-md text-sm text-ink-soft">
+      Every issued refund and payout records an actor and an action. On the open
+      demo the actor is <span class="font-mono text-xs">demo</span>; set
+      <span class="font-mono text-xs">ADMIN_PASSWORD</span> and it becomes the
+      Basic-auth operator.
+    </p>
+  </div>
+
+  <div class="panel overflow-hidden">
+    <table class="ledger-table">
+      <thead>
+        <tr><th>When</th><th>Actor</th><th>Action</th><th>Detail</th></tr>
+      </thead>
+      <tbody>
+        <% @entries.each do |e| %>
+          <tr>
+            <td class="font-mono text-xs text-ink-faint"><%= e.created_at.strftime("%b %-d · %H:%M:%S") %></td>
+            <td class="font-mono text-xs text-ink"><%= e.actor %></td>
+            <td><span class="chip chip-requested"><%= e.action %></span></td>
+            <td class="text-sm text-ink-soft"><%= e.detail %></td>
+          </tr>
+        <% end %>
+        <% if @entries.empty? %>
+          <tr><td colspan="4" class="px-4 py-16 text-center text-sm text-ink-faint">No actions recorded yet.</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

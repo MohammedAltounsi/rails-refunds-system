@@ -57,8 +57,12 @@
     </main>
 
     <footer class="mx-auto max-w-6xl px-6 pb-12">
-      <div class="border-t border-line pt-6 text-xs text-ink-faint">
-        <span class="font-mono">SAR</span> · integer halalas, no floats · balances derived from an append-only log · money booked only on a signature-verified webhook
+      <div class="flex flex-col gap-3 border-t border-line pt-6 text-xs text-ink-faint sm:flex-row sm:items-center sm:justify-between">
+        <span><span class="font-mono">SAR</span> · integer halalas, no floats · balances derived from an append-only log · money booked only on a signature-verified webhook</span>
+        <span class="flex gap-4">
+          <%= link_to "Audit trail", audit_path, class: "hover:text-ink" %>
+          <%= link_to "Health", health_path, class: "font-mono hover:text-ink" %>
+        </span>
       </div>
     </footer>
   </body>

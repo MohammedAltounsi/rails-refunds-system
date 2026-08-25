@@ -19,10 +19,11 @@ class Rack::Attack
   # Baseline: 300 requests / 5 min / IP across the whole app.
   throttle("req/ip", limit: 300, period: 5.minutes) { |req| req.ip }
 
-  # The refund-issuing endpoint is the abuse surface (spamming refund creation
-  # against a real Stripe account): tighter at 20 / min / IP.
+  # The money-moving endpoints are the abuse surface (spamming refund/payout
+  # creation against a real Stripe account, via the UI or the JSON API): tighter
+  # at 20 / min / IP.
   throttle("writes/ip", limit: 20, period: 1.minute) do |req|
-    req.ip if req.post? && req.path.start_with?("/refunds")
+    req.ip if req.post? && req.path.start_with?("/refunds", "/payouts", "/api/refunds")
   end
 
   self.throttled_responder = lambda do |_req|
