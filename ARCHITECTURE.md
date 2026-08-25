@@ -139,19 +139,41 @@ path; the only division by 100 is display formatting.
 - **Why:** floating point cannot represent most decimal money values exactly.
   Integer minor units are exact. Standard practice; not worth debating.
 
-## What I would add for production
+### 9. The webhook boundary is convergent, the internal FSM is strict
 
-- Move webhook-triggered settlement into a background job, so a slow ledger
-  write never times out Stripe's delivery (the inbox already makes this safe
-  to defer).
+The strict state machine (#1) is right for our own code, but wrong at the
+webhook edge. Stripe delivers events at-least-once and out of order: a
+`succeeded` can arrive before we recorded `processing`, or after a crash left
+the row `failed`. Raising there would turn Stripe's retries into an infinite
+500-loop and never book money Stripe already moved.
+
+So the webhook calls convergent, ordering-tolerant methods
+(`apply_stripe_succeeded!`, `apply_stripe_failed!`) instead of the strict
+`settle!`/`fail!`. A verified `succeeded` is authoritative: converge to settled
+from any non-settled state and book the reversal exactly once (the ledger key
+guarantees it). A late `failed` after a settle is ignored, never un-booking
+money. The strict FSM stays, and stays tested, for internal callers.
+
+### 10. Settlement stays synchronous; a sweep heals what drops
+
+Settlement is not offloaded to a background job. The only async adapter that
+fits a 512 MB single-worker instance is in-memory, which is lost on restart, so
+offloading would trade Stripe's durable synchronous retry for a queue that can
+silently drop money. Instead the ledger write runs inline (Stripe retries on a
+500), and `ReprocessStuckStripeEventsJob` sweeps any inbox event still
+unprocessed and re-runs it. Idempotent handlers make the replay safe.
+
+## What I would add next
+
 - A cached balance projection (see #6).
-- Continuous reconciliation with alerting instead of an on-demand scan.
-- Authentication and an audit log on who issued a refund. This demo has no
-  login, matching project 1's "show the money core, not an auth system."
-- A real `Payout` model (aggregating settled refunds, or vendor payments,
-  into a batched transfer) if the scope grows beyond refunds. Out of scope
-  here: nothing in this build needed money to leave in any shape other than a
-  refund, so a separate payout batching concept would have been unused code.
+- Alerting on the first non-zero reconciliation run (the runs are already
+  stored; this is a notifier on top).
+- Real Stripe Connect payouts (this build accrues and disburses against the
+  ledger; a live integration would drive `mark_processing!` from a real
+  transfer and settle on the real `payout.paid` event, which the webhook
+  already handles).
+- Reconciliation of payouts against Stripe transfers, mirroring the refund
+  reconciliation.
 
 ## Testing
 

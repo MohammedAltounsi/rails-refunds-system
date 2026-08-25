@@ -29,7 +29,11 @@ when a refund is partial, a webhook is redelivered, or a request is retried.
 | Idempotent reversals | Settling a refund posts a balancing ledger entry, keyed on the refund. A redelivered webhook reverses the money once. | `Refund#settle!`, `app/models/ledger.rb` |
 | Stripe refunds | Created via the Refund API (test mode). Money is booked only on a signature-verified `refund.updated` webhook, never on the synchronous create response. | `app/models/refund_gateway.rb`, `app/controllers/webhooks/stripe_controller.rb` |
 | Webhook inbox | Every Stripe event recorded once (unique `event_id`); a redelivery of an already-processed event is a no-op. | `app/models/stripe_event.rb` |
-| Reconciliation | Compares settled refunds against Stripe and reports dropped webhooks, amount mismatches, and orphan reversals. | `app/services/reconciliation_service.rb` |
+| Payouts | The outbound-to-payee half: requesting a payout accrues the liability in the same transaction, and the cash is disbursed only on a verified `payout.paid` webhook. Same idempotency, state machine, and double-entry discipline as a refund. | `app/models/payout.rb` |
+| Reconciliation | Compares settled refunds against Stripe and reports dropped webhooks, amount mismatches, and orphan reversals. Every run is stored, so drift has a timeline; a Stripe outage reports `unreachable`, not a flood of false orphans. | `app/services/reconciliation_service.rb`, `app/models/reconciliation_run.rb` |
+| Recovery sweep | Any webhook event stuck unprocessed (a crash-dropped settlement) is re-run and healed, not just flagged. | `app/jobs/reprocess_stuck_stripe_events_job.rb` |
+| JSON API | `POST /api/refunds` honors an `Idempotency-Key` header exactly like Stripe's own API. Spec at `/openapi.yaml`. | `app/controllers/api/refunds_controller.rb` |
+| Audit + access | Every issued refund and payout records an actor and an action. Money-moving actions sit behind Basic auth when `ADMIN_PASSWORD` is set. | `app/models/audit_log.rb` |
 
 ## How it works
 
