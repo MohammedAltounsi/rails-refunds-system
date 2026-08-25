@@ -40,10 +40,10 @@
     </div>
   </dl>
 
-  <% if %w[processing settled].include?(@refund.status) %>
+  <% if @refund.status == "settled" %>
     <div class="mt-6 flex items-center gap-4">
       <%= button_to "Replay settlement webhook", replay_refund_path(@refund), method: :post, class: "btn btn-ghost" %>
-      <p class="text-xs text-ink-soft">Re-delivers Stripe's webhook. The ledger stays booked exactly once — a live proof of idempotency.</p>
+      <p class="text-xs text-ink-soft">Re-delivers Stripe's webhook. The ledger stays booked exactly once, a live proof of idempotency.</p>
     </div>
   <% end %>
 </div>

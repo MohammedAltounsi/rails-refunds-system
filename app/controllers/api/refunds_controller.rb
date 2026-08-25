@@ -4,6 +4,13 @@ module Api
   # refund once and returns the same resource. Inherits ActionController::API so
   # non-browser clients aren't gated by the modern-browser check.
   class RefundsController < ActionController::API
+    include OperatorAuthentication
+
+    # Same access control as the HTML refund form: locked behind Basic auth when
+    # ADMIN_PASSWORD is set, open on the public demo. Without this, setting the
+    # password would lock the UI but leave the API an open money-moving endpoint.
+    before_action :require_operator!, only: :create
+
     rescue_from ActiveRecord::RecordNotFound do
       render json: { error: "not_found" }, status: :not_found
     end
