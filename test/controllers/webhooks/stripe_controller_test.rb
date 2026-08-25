@@ -80,6 +80,38 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
     assert_equal "processing", refund.reload.status
   end
 
+  test "an out-of-order succeeded event (arriving before we recorded processing) settles without a 500" do
+    charge = Charge.capture!(stripe_payment_intent_id: "pi_#{SecureRandom.hex(4)}", amount_cents: 10_00)
+    refund = Refund.request!(charge: charge, amount_cents: 4_00, idempotency_key: "ooo-#{SecureRandom.hex(4)}")
+    # NOTE: no mark_processing! — the refund is still "requested" when Stripe's
+    # succeeded webhook lands. The strict FSM would raise here; the convergent
+    # handler must not.
+    payload = refund_updated_event(event_id: "evt_ooo_#{refund.id}", stripe_refund_id: "re_ooo_#{refund.id}",
+                                    refund_id: refund.id, status: "succeeded", amount: 4_00)
+
+    post "/webhooks/stripe", params: payload, headers: signed_headers(payload)
+
+    assert_response :ok, "an out-of-order event must not 500-loop Stripe"
+    assert_equal "settled", refund.reload.status
+    assert_equal 10_00 - 4_00, Ledger.account(Ledger::REVENUE_ACCOUNT).balance_cents
+  end
+
+  test "a late failed event after settlement is acknowledged and leaves the money booked" do
+    refund = new_refund
+    succeeded = refund_updated_event(event_id: "evt_s_#{refund.id}", stripe_refund_id: refund.stripe_refund_id,
+                                      refund_id: refund.id, status: "succeeded", amount: 4_00)
+    post "/webhooks/stripe", params: succeeded, headers: signed_headers(succeeded)
+    assert_equal "settled", refund.reload.status
+
+    failed = refund_updated_event(event_id: "evt_f_#{refund.id}", stripe_refund_id: refund.stripe_refund_id,
+                                   refund_id: refund.id, status: "failed", amount: 4_00)
+    assert_no_difference -> { Posting.count } do
+      post "/webhooks/stripe", params: failed, headers: signed_headers(failed)
+    end
+    assert_response :ok
+    assert_equal "settled", refund.reload.status, "a stale failed never un-books settled money"
+  end
+
   test "a forged signature is rejected and nothing settles" do
     refund = new_refund
     payload = refund_updated_event(event_id: "evt_forged", stripe_refund_id: refund.stripe_refund_id,
