@@ -3,7 +3,7 @@
 #
 #   - inline, on the webhook request (the happy path; Stripe retries on a 500)
 #   - from the recovery sweep (ReprocessStuckStripeEventsJob), which re-runs any
-#     inbox event that never reached `processed` — auto-healing a settlement that
+#     inbox event that never reached `processed`, recovering a settlement that
 #     was dropped by a crash between recording the event and booking the money.
 #
 # Every handler is convergent and idempotent (keyed ledger postings), so running

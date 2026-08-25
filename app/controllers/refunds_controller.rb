@@ -16,7 +16,7 @@ class RefundsController < ApplicationController
 
   # Issues a refund. The idempotency key comes from the client (a support
   # tool's "submit" button click, in a real system) so a double-click or a
-  # retried request refunds once — Refund.request! is keyed on it.
+  # retried request refunds once. Refund.request! is keyed on it.
   def create
     charge = Charge.find(params[:charge_id])
     refund = RefundService.issue!(
@@ -34,8 +34,8 @@ class RefundsController < ApplicationController
   # Demo: stand in for Stripe's signed webhook so a visitor can drive a
   # `processing` refund to its end state by clicking. It calls the SAME
   # convergent, ordering-tolerant methods a real webhook calls, so the demo is
-  # faithful, not a shortcut. Off in production (demo_mode? false), where only a
-  # signature-verified webhook may settle money — this action then refuses.
+  # faithful. Off in production (demo_mode? false), where only a
+  # signature-verified webhook may settle money. This action then refuses.
   def simulate
     return redirect_to(refunds_path, alert: "Demo actions are disabled here.") unless demo_mode?
 
@@ -44,20 +44,20 @@ class RefundsController < ApplicationController
     when "succeeded"
       refund.apply_stripe_succeeded!(stripe_refund_id: refund.stripe_refund_id || "re_demo_#{refund.id}")
       AuditLog.record!(actor: "demo (simulated webhook)", action: "refund.webhook.succeeded", subject: refund,
-                       detail: "settled #{helpers.money(refund.amount_cents)} — reversal booked to the ledger")
+                       detail: "settled #{helpers.money(refund.amount_cents)}, reversal booked to the ledger")
       redirect_to refund, notice: "Played Stripe's webhook: settled. The reversal is booked to the ledger, exactly once."
     when "failed"
       refund.apply_stripe_failed!("demo: simulated Stripe failure")
       AuditLog.record!(actor: "demo (simulated webhook)", action: "refund.webhook.failed", subject: refund,
-                       detail: "marked failed — no money booked")
-      redirect_to refund, notice: "Played Stripe's webhook: failed. No money moved — the ledger is untouched."
+                       detail: "marked failed, no money booked")
+      redirect_to refund, notice: "Played Stripe's webhook: failed. No money moved. The ledger is untouched."
     else
       redirect_to refund, alert: "Pick an outcome to simulate."
     end
   end
 
   # Demo: re-deliver the settlement webhook for an ALREADY-settled refund and
-  # show the ledger is unchanged, a live proof of exactly-once. Restricted to
+  # show the ledger is unchanged, confirming exactly-once. Restricted to
   # settled refunds on purpose: it must never be a back door that settles a
   # `processing` refund without Stripe's confirmation (money is booked only on a
   # verified webhook). Idempotent either way, but this keeps the invariant intact.

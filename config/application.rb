@@ -28,7 +28,7 @@ module RailsRefundsSystem
     # refund or payout through its whole lifecycle by clicking, no Stripe account
     # wired. Default-off is deliberate: a real deployment that forgets to set
     # anything settles money ONLY on a signature-verified webhook, and the demo
-    # buttons and routes never exist. You opt IN to the shortcuts, never out.
+    # buttons and routes never exist. You opt IN to the shortcuts.
     config.x.demo_mode = ENV["DEMO_MODE"] == "true"
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do

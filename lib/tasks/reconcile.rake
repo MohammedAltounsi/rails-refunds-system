@@ -4,7 +4,7 @@ task reconcile: :environment do
   ReconciliationRun.record!(r)   # persist a row so drift has a timeline
 
   puts ""
-  puts "  REFUNDS & PAYOUTS — LEDGER RECONCILIATION"
+  puts "  REFUNDS & PAYOUTS: LEDGER RECONCILIATION"
   puts "  " + ("─" * 46)
   puts "  Stripe reachable:         #{r.stripe_reachable ? 'yes' : 'NO'}"
   puts "  Stripe refunds (settled): #{r.stripe_count}"
@@ -28,14 +28,14 @@ task reconcile: :environment do
 
   puts ""
   if r.unreachable?
-    puts "  ? UNREACHABLE — could not reach Stripe; ledger invariants #{r.invariants_hold? ? 'hold' : 'FAILED'}."
+    puts "  ? UNREACHABLE: could not reach Stripe; ledger invariants #{r.invariants_hold? ? 'hold' : 'FAILED'}."
     puts ""
     exit 2
   elsif r.ok?
-    puts "  ✓ CLEAN — ledger and Stripe agree to the halala."
+    puts "  ✓ CLEAN. Ledger and Stripe agree to the halala."
     puts ""
   else
-    puts "  ✗ DRIFT DETECTED — see above."
+    puts "  ✗ DRIFT DETECTED. See above."
     puts ""
     exit 1
   end

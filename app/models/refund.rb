@@ -1,7 +1,8 @@
 # A refund's life: requested -> processing -> settled | failed. Money only
 # ever leaves the ledger at `settled`, and only via a verified Stripe webhook
-# (see app/controllers/webhooks/stripe_controller.rb) — never on request or
-# on Stripe's synchronous create response, which can still be reversed.
+# (see app/controllers/webhooks/stripe_controller.rb). It never leaves on the
+# request itself or on Stripe's synchronous create response, which can still
+# be reversed.
 class Refund < ApplicationRecord
   class InvalidTransition < StandardError; end
   class OverRefund < StandardError; end
@@ -21,9 +22,9 @@ class Refund < ApplicationRecord
 
   # The only way to create a refund. Locks the charge row so two concurrent
   # partial-refund requests can't both read "enough left" and together
-  # over-refund it — the same time-of-check-to-time-of-use race project 1
-  # guards against on a wallet spend. A retry with the same idempotency_key
-  # returns the original refund instead of creating a second one.
+  # over-refund it. Same time-of-check-to-time-of-use race project 1 guards
+  # against on a wallet spend. A retry with the same idempotency_key returns
+  # the original refund instead of creating a second one.
   def self.request!(charge:, amount_cents:, idempotency_key:)
     return find_by!(idempotency_key: idempotency_key) if exists?(idempotency_key: idempotency_key)
 
@@ -70,8 +71,9 @@ class Refund < ApplicationRecord
   # Stripe delivers events at-least-once and out of order. The strict FSM above
   # is right for our own code, but wrong at the webhook edge: a `succeeded`
   # event can arrive before we recorded `processing`, or after a crash left the
-  # row `failed`, and raising there would 500-loop Stripe's retries forever and
-  # never book money Stripe already moved. So the webhook calls these instead.
+  # row `failed`, and raising there would return 500 and make Stripe retry the
+  # delivery indefinitely without ever booking money Stripe already moved. So
+  # the webhook calls these instead.
 
   # A signature-verified Stripe "succeeded" is authoritative: the money left.
   # Converge to settled from ANY non-settled state and book the reversal exactly
@@ -81,7 +83,7 @@ class Refund < ApplicationRecord
       self.stripe_refund_id ||= stripe_refund_id
       next if status == "settled"   # already booked by an earlier delivery
       # If this row was marked `failed` on an ambiguous Stripe error, Stripe now
-      # confirms it actually succeeded — the over-refund CONSTRAINT TRIGGER is
+      # confirms it actually succeeded. The over-refund CONSTRAINT TRIGGER is
       # the backstop if the reserve was reused in between.
       update!(status: "settled", failure_reason: nil)
       post_reversal!

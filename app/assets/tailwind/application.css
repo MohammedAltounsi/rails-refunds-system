@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-   "The Desk" — a dark payments terminal. Money is data on a trading desk:
+   "The Desk": a dark payments terminal. Money is data on a trading desk:
    monospace figures in ruled columns, a near-black console, one live green for
    credit, amber for in-flight, red for what reverses. Archivo carries the few
    words; JetBrains Mono carries every number, id, and account.

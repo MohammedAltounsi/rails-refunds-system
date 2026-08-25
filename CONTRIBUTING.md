@@ -37,7 +37,7 @@ sense on PostgreSQL (`refund_concurrency_test.rb`): the over-refund database
 trigger and the two-concurrent-requests race. CI runs the full suite on
 Postgres, so those are actually exercised there, not just assumed correct.
 
-## The one real rule: money paths get a test
+## Money paths get a test
 
 Any change to `Refund`, `Charge`, `Ledger`, `Account`, `Entry`, or the
 webhook controller has to ship with a test that would fail without the

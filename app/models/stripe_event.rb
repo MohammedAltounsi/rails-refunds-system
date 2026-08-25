@@ -8,11 +8,11 @@ class StripeEvent < ApplicationRecord
   validates :status, inclusion: { in: STATUSES }
   # No uniqueness validation: it has a check-then-insert race and would raise
   # RecordInvalid before the DB is consulted. The unique index is the real
-  # guard, caught in .record below — same idempotency pattern as Ledger.post!.
+  # guard, caught in .record below. Same idempotency pattern as Ledger.post!.
 
   scope :failed, -> { where(status: "failed") }
 
-  # Events that were recorded but never reached `processed` — a settlement that
+  # Events that were recorded but never reached `processed`: a settlement that
   # a crash dropped, or a handler that raised. The recovery sweep re-runs these.
   scope :reprocessable, ->(older_than: 2.minutes) {
     where(status: %w[received failed]).where(created_at: ..older_than.ago)

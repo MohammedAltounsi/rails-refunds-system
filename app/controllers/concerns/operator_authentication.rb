@@ -6,7 +6,7 @@ module OperatorAuthentication
   extend ActiveSupport::Concern
 
   # ActionController::API does not bring the HTTP Basic helpers that
-  # ActionController::Base includes by default, so pull them in here — the API
+  # ActionController::Base includes by default, so pull them in here. The API
   # controller relies on this concern for exactly the same auth as the HTML one.
   included do
     include ActionController::HttpAuthentication::Basic::ControllerMethods

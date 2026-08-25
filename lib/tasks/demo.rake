@@ -28,7 +28,7 @@ namespace :demo do
     reserved = charge.reload.refunded_cents
 
     puts ""
-    puts "  CONCURRENCY PROOF — #{n} threads each refunding 10.00 SAR against a 100.00 SAR charge"
+    puts "  CONCURRENCY PROOF: #{n} threads each refunding 10.00 SAR against a 100.00 SAR charge"
     puts "  " + ("─" * 60)
     puts "  Accepted:            #{accepted.value}"
     puts "  Rejected (guard):    #{rejected.value}"
@@ -36,9 +36,9 @@ namespace :demo do
     puts "  Captured (the cap):  #{'%.2f' % (captured / 100.0)} SAR"
     puts "  " + ("─" * 60)
     if reserved <= captured
-      puts "  ✓ NO OVER-REFUND — the charge was never reserved past what it captured."
+      puts "  ✓ NO OVER-REFUND. The charge was never reserved past what it captured."
     else
-      puts "  ✗ OVER-REFUND — reserved #{reserved} > captured #{captured}. The guard failed."
+      puts "  ✗ OVER-REFUND: reserved #{reserved} > captured #{captured}. The guard failed."
       exit 1
     end
     puts ""

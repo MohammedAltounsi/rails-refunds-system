@@ -16,7 +16,7 @@
       <select name="charge_id" id="charge_id" class="field font-mono text-sm">
         <% @charges.each do |c| %>
           <option value="<%= c.id %>" <%= "selected" if charge && c.id == charge.id %>>
-            <%= c.stripe_payment_intent_id %> — refundable <%= money(c.refundable_cents) %>
+            <%= c.stripe_payment_intent_id %> · refundable <%= money(c.refundable_cents) %>
           </option>
         <% end %>
       </select>
@@ -33,7 +33,7 @@
       <label class="meta mb-2 block" for="idempotency_key">idempotency key <span class="text-ink-faint">(optional)</span></label>
       <input type="text" name="idempotency_key" id="idempotency_key" class="field font-mono text-sm"
              placeholder="a stable key from your own retry logic">
-      <p class="mt-2 text-xs text-ink-dim">Leave blank to generate one. The same key twice issues the refund once, enforced by a unique index, not just a check.</p>
+      <p class="mt-2 text-xs text-ink-dim">Leave blank to generate one. Send the same key twice and the refund still happens once. A unique database index guarantees it.</p>
     </div>
 
     <div class="flex items-center gap-4 border-t border-line pt-6">

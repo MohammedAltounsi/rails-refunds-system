@@ -23,7 +23,7 @@
     </div>
     <div class="readout px-6">
       <dt class="meta">stripe refund id</dt>
-      <dd class="font-mono text-xs text-ink-dim"><%= @refund.stripe_refund_id || "—" %></dd>
+      <dd class="font-mono text-xs text-ink-dim"><%= @refund.stripe_refund_id || "none" %></dd>
     </div>
     <% if @refund.failure_reason.present? %>
       <div class="readout px-6">
@@ -58,7 +58,7 @@
   <% if @refund.status == "settled" %>
     <div class="mt-6 flex items-center gap-4">
       <%= button_to "replay settlement webhook", replay_refund_path(@refund), method: :post, class: "btn btn-ghost" %>
-      <p class="text-xs text-ink-dim">Re-delivers Stripe's webhook. The ledger stays booked exactly once, a live proof of idempotency.</p>
+      <p class="text-xs text-ink-dim">Re-delivers Stripe's webhook. The ledger stays booked exactly once.</p>
     </div>
   <% end %>
 </div>

@@ -1,7 +1,7 @@
 # A stored snapshot of one reconciliation. Continuous reconciliation runs on a
-# schedule (ReconcileJob) and persists a row here, so the safety net has a
-# history — you can see the moment drift first appeared, not just that it exists
-# now. The live page reads the latest run alongside an on-demand check.
+# schedule (ReconcileJob) and persists a row here, so the safety net keeps a
+# history. It shows when drift first appeared, not only that it exists now.
+# The live page reads the latest run alongside an on-demand check.
 class ReconciliationRun < ApplicationRecord
   scope :recent, -> { order(created_at: :desc) }
 

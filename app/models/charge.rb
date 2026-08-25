@@ -1,9 +1,9 @@
 class Charge < ApplicationRecord
   has_many :refunds
 
-  # A captured card payment enters the ledger the moment it exists here — this
-  # app owns the outbound (refund) half of the money story, not the inbound
-  # capture flow, so a Charge is created already-settled (see project 1 for
+  # A captured card payment enters the ledger the moment it exists here. This
+  # app owns the outbound (refund) half of the money flow. It doesn't handle
+  # inbound capture, so a Charge is created already-settled (see project 1 for
   # how a payment_intent.succeeded webhook actually captures one).
   def self.capture!(stripe_payment_intent_id:, amount_cents:, currency: "sar")
     charge = create!(

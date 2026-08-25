@@ -9,11 +9,11 @@ module Ledger
     Account.find_or_create_by!(name: name)
   end
 
-  # The ONLY way money moves. Give it a memo and the lines that move.
-  # lines = [[account, amount_cents], ...] — amounts must sum to zero.
+  # The only way money moves. Give it a memo and the lines that move.
+  # lines = [[account, amount_cents], ...]; amounts must sum to zero.
   #
   # key: an idempotency key. Pass the same key twice (a retry, a webhook
-  # redelivery) and the money moves ONCE — the first entry is returned again
+  # redelivery) and the money moves once. The first entry is returned again
   # instead of a duplicate being created. This is what makes a refund
   # reversal safe to replay: settling the same refund twice books it once.
   #
@@ -35,7 +35,7 @@ module Ledger
     end
   rescue ActiveRecord::RecordNotUnique
     # Race: another request posted the same key between our check and our
-    # save. The unique index caught it and rolled us back — the winner
+    # save. The unique index caught it and rolled us back. The winner
     # already exists. Return it. Money still moved exactly once.
     Entry.find_by!(idempotency_key: key)
   end

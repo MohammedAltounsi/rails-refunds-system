@@ -33,8 +33,8 @@ else.
 - **Why:** a refund's status is a contract with the ledger. `requested →
   settled` (skipping `processing`) would mean booking money for a Stripe call
   that may never have happened. `settled → anything` would mean un-reversing
-  a reversal that already happened. An explicit allow-list makes illegal
-  states a raised exception, not a silent data-integrity bug.
+  a reversal that already happened. An explicit allow-list turns any illegal
+  transition into a raised exception at the point it happens.
 - **Trade-off:** none. This is a small, fixed set of states; a state machine
   gem would add a dependency for something six lines already do.
 
@@ -52,7 +52,7 @@ re-checks the same rule at COMMIT, independent of the app.
   requests against the same charge so the second one sees the first's
   reservation.
 - **Why reserve on `requested`, not just `settled`:** a `requested` or
-  `processing` refund hasn't moved money yet, but it represents an in-flight
+  `processing` refund hasn't moved money yet, but it is an in-flight
   promise to Stripe. Counting only `settled` refunds against the cap would let
   the same race happen one layer up: two refunds could both be issued to
   Stripe before either settles, and both could succeed.
@@ -121,9 +121,9 @@ column.
 `ReconciliationService` compares settled refunds against Stripe's list of
 succeeded refunds and reports three failure modes: a Stripe refund the
 ledger never recorded (dropped webhook), a settled amount that disagrees, and
-a settled reversal with no matching Stripe refund (money leaving the books
-from nowhere). Plus the two structural invariants: every entry balances, and
-the global sum is zero.
+a settled reversal with no matching Stripe refund (money the ledger moved
+that Stripe has no record of). Plus the two structural invariants: every entry
+balances, and the global sum is zero.
 
 - **Why:** webhooks get dropped and code has bugs. A ledger that can't be
   checked against the processor that actually moves the money is a ledger you

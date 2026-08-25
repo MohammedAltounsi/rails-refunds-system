@@ -6,7 +6,7 @@ charges = [
   { pi: "pi_seed_3", amount: 30_00 }
 ].map { |c| Charge.find_by(stripe_payment_intent_id: c[:pi]) || Charge.capture!(stripe_payment_intent_id: c[:pi], amount_cents: c[:amount]) }
 
-# One fully settled partial refund, one still processing, one failed — enough
+# One fully settled partial refund, one still processing, one failed. Enough
 # to show every state on the refunds and ledger pages without hitting Stripe.
 def seed_refund(charge, amount_cents, key, final_status:, stripe_id:)
   refund = Refund.request!(charge: charge, amount_cents: amount_cents, idempotency_key: key)
@@ -24,7 +24,7 @@ seed_refund(charges[0], 15_00, "seed-refund-1", final_status: "settled", stripe_
 seed_refund(charges[1], 40_00, "seed-refund-2", final_status: nil,       stripe_id: "re_seed_2") # stays "processing"
 seed_refund(charges[2], 30_00, "seed-refund-3", final_status: "failed",  stripe_id: "re_seed_3")
 
-# One paid payout, one still processing, one failed — every payout state on the
+# One paid payout, one still processing, one failed. Every payout state on the
 # page without hitting Stripe. Idempotent: request!/pay! are keyed.
 def seed_payout(payee, amount_cents, key, final_status:, stripe_id:)
   payout = Payout.request!(payee: payee, amount_cents: amount_cents, idempotency_key: key)
