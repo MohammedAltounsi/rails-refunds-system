@@ -1,130 +1,136 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /* ==========================================================================
-   "The Ledger" — a warm ivory editorial system for a double-entry payments app.
-   Fraunces (display) · Hanken Grotesk (text) · JetBrains Mono (every figure).
+   "The Desk" — a dark payments terminal. Money is data on a trading desk:
+   monospace figures in ruled columns, a near-black console, one live green for
+   credit, amber for in-flight, red for what reverses. Archivo carries the few
+   words; JetBrains Mono carries every number, id, and account.
    ========================================================================== */
 
 @theme {
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
-  --font-sans: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+  --font-sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
 
-  --color-paper: #f3eee2;
-  --color-paper-edge: #ece5d4;
-  --color-panel: #fbf9f3;
-  --color-ink: #1c1813;
-  --color-ink-soft: #756b5c;
-  --color-ink-faint: #a49a88;
-  --color-line: #e5ddcc;
-  --color-line-strong: #d6ccb7;
+  --color-bg: #0a0c10;          /* the console */
+  --color-bg-raise: #0e1117;
+  --color-panel: #12161d;       /* a card of the desk */
+  --color-panel-raise: #171d25;
+  --color-line: #222a34;        /* hairline rules */
+  --color-line-bright: #2f3a46;
 
-  --color-credit: #1f6f4f;      /* emerald — settled, positive, in balance */
-  --color-credit-soft: #e5efe8;
-  --color-debit: #a8432e;       /* oxblood — failed, reversal, drift */
-  --color-debit-soft: #f4e6e0;
-  --color-pending: #916313;     /* amber — processing, in-flight */
-  --color-pending-soft: #f2e8d3;
+  --color-ink: #e8ecf2;         /* primary readout */
+  --color-ink-dim: #97a2b2;     /* secondary, tinted cool not gray */
+  --color-ink-faint: #616c7c;
 
-  --shadow-panel: 0 1px 2px rgba(28, 24, 19, 0.04), 0 8px 24px -12px rgba(28, 24, 19, 0.14);
-  --shadow-lift: 0 2px 4px rgba(28, 24, 19, 0.05), 0 18px 40px -18px rgba(28, 24, 19, 0.22);
+  --color-credit: #34d99b;      /* settled, paid, positive, in balance */
+  --color-credit-dim: #12352a;
+  --color-pending: #f2b23c;     /* processing, in-flight */
+  --color-pending-dim: #372c12;
+  --color-debit: #ff6058;       /* failed, reversal, drift */
+  --color-debit-dim: #391c1b;
 }
 
 @layer base {
   html { -webkit-text-size-adjust: 100%; }
 
   body {
-    background-color: var(--color-paper);
+    background-color: var(--color-bg);
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-    /* faint ruled-paper wash: a warm vignette plus a hairline horizontal grid */
-    background-image:
-      radial-gradient(120% 80% at 50% -10%, rgba(255, 252, 244, 0.9) 0%, rgba(243, 238, 226, 0) 55%),
-      repeating-linear-gradient(to bottom, transparent 0, transparent 31px, rgba(28, 24, 19, 0.022) 32px);
+    /* the desk glow: a cool light over the top of the console, nothing more */
+    background-image: radial-gradient(140% 90% at 50% -20%, rgba(52, 217, 155, 0.06) 0%, rgba(10, 12, 16, 0) 45%);
     background-attachment: fixed;
   }
 
-  ::selection { background: var(--color-credit); color: #fff; }
-
-  h1, h2, h3 { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.01em; }
+  ::selection { background: var(--color-credit); color: #04140d; }
 
   /* every figure lines up: fixed-width, tabular */
   .font-mono, code, .tabular { font-variant-numeric: tabular-nums; }
 
+  h1, h2, h3 { font-weight: 600; letter-spacing: -0.01em; }
+
   a { text-underline-offset: 3px; }
+
+  ::placeholder { color: var(--color-ink-faint); }
 }
 
 @layer components {
-  /* micro-label above a section or field */
-  .eyebrow {
+  /* a terminal title: mono, uppercase, tracked, with a live caret */
+  .desk-title {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .caret {
+    display: inline-block;
+    width: 0.55ch; height: 1.05em;
+    margin-left: 0.15ch;
+    transform: translateY(0.14em);
+    background: var(--color-credit);
+    animation: blink 1.1s steps(1) infinite;
+  }
+  @keyframes blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+
+  /* a mono micro-label for a field or a column of readouts (never a kicker) */
+  .meta {
+    font-family: var(--font-mono);
     font-size: 11px;
     line-height: 1;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    font-weight: 600;
     color: var(--color-ink-faint);
   }
 
-  /* the card surface, like a leaf of the ledger */
+  /* a panel of the desk. Elevation is the border, not a shadow. */
   .panel {
     background: var(--color-panel);
     border: 1px solid var(--color-line);
-    border-radius: 14px;
-    box-shadow: var(--shadow-panel);
+    border-radius: 12px;
   }
 
   /* status chip with a leading state dot */
   .chip {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.28rem 0.7rem 0.28rem 0.6rem;
-    border-radius: 999px;
+    gap: 0.42rem;
+    padding: 0.24rem 0.6rem 0.24rem 0.5rem;
+    border-radius: 6px;
+    font-family: var(--font-mono);
     font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
+    font-weight: 500;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     border: 1px solid transparent;
   }
-  .chip::before {
-    content: "";
-    width: 6px; height: 6px;
-    border-radius: 999px;
-    background: currentColor;
-    opacity: 0.9;
-  }
-  .chip-requested { color: var(--color-ink-soft);  background: #efe9db; border-color: var(--color-line); }
-  .chip-processing{ color: var(--color-pending);   background: var(--color-pending-soft); border-color: #e6d6b0; }
-  .chip-settled   { color: var(--color-credit);    background: var(--color-credit-soft);  border-color: #cfe2d5; }
-  .chip-failed    { color: var(--color-debit);     background: var(--color-debit-soft);   border-color: #e8cfc6; }
+  .chip::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+  .chip-requested { color: var(--color-ink-dim);  background: #171d25; border-color: var(--color-line); }
+  .chip-processing{ color: var(--color-pending);  background: var(--color-pending-dim); border-color: #4a3a18; }
+  .chip-settled   { color: var(--color-credit);   background: var(--color-credit-dim);  border-color: #1c4c3b; }
+  .chip-failed    { color: var(--color-debit);    background: var(--color-debit-dim);   border-color: #522725; }
 
   /* buttons */
   .btn {
     display: inline-flex; align-items: center; gap: 0.5rem;
-    padding: 0.6rem 1.1rem;
-    border-radius: 10px;
-    font-size: 0.875rem; font-weight: 600;
-    transition: transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease;
+    padding: 0.58rem 1.05rem;
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.82rem; font-weight: 500; letter-spacing: 0.02em;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   }
-  .btn-primary {
-    background: var(--color-ink); color: var(--color-paper);
-    box-shadow: 0 1px 2px rgba(28,24,19,0.2), 0 10px 22px -14px rgba(28,24,19,0.8);
-  }
-  .btn-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-lift); }
-  .btn-primary:active { transform: translateY(0); }
-  .btn-ghost { color: var(--color-ink); border: 1px solid var(--color-line-strong); background: transparent; }
-  .btn-ghost:hover { background: #fff; }
+  .btn-primary { background: var(--color-credit); color: #04140d; }
+  .btn-primary:hover { background: #4ce7ac; }
+  .btn-ghost { color: var(--color-ink); border: 1px solid var(--color-line-bright); background: transparent; }
+  .btn-ghost:hover { border-color: var(--color-credit); color: var(--color-credit); }
 
   /* form fields */
   .field {
     width: 100%;
-    background: #fff;
-    border: 1px solid var(--color-line-strong);
-    border-radius: 10px;
-    padding: 0.62rem 0.8rem;
+    background: var(--color-bg-raise);
+    border: 1px solid var(--color-line-bright);
+    border-radius: 8px;
+    padding: 0.6rem 0.78rem;
     font-size: 0.9rem;
     color: var(--color-ink);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -132,42 +138,53 @@
   .field:focus {
     outline: none;
     border-color: var(--color-credit);
-    box-shadow: 0 0 0 3px var(--color-credit-soft);
+    box-shadow: 0 0 0 3px rgba(52, 217, 155, 0.14);
   }
 
   /* data table */
   .ledger-table { width: 100%; border-collapse: collapse; text-align: left; }
   .ledger-table thead th {
-    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
-    font-weight: 600; color: var(--color-ink-faint);
-    padding: 0.7rem 1.1rem; border-bottom: 1px solid var(--color-line);
+    font-family: var(--font-mono);
+    font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 500; color: var(--color-ink-faint);
+    padding: 0.65rem 1rem; border-bottom: 1px solid var(--color-line);
   }
-  .ledger-table tbody td { padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--color-line); font-size: 0.9rem; }
+  .ledger-table tbody td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--color-line); font-size: 0.88rem; }
   .ledger-table tbody tr:last-child td { border-bottom: 0; }
-  .ledger-table tbody tr { transition: background 0.12s ease; }
-  .ledger-table tbody tr:hover { background: #fff; }
+  .ledger-table tbody tr { transition: background 0.1s ease; }
+  .ledger-table tbody tr:hover { background: var(--color-panel-raise); }
 
-  /* nav link active state */
-  .nav-link { color: var(--color-ink-soft); transition: color 0.15s ease; position: relative; }
-  .nav-link:hover { color: var(--color-ink); }
+  /* terminal readout: right-aligned mono value against a dim label */
+  .readout { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding: 0.55rem 0; border-bottom: 1px solid var(--color-line); }
+  .readout:last-child { border-bottom: 0; }
+
+  /* nav tabs */
+  .nav-link {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+    color: var(--color-ink-faint);
+    transition: color 0.15s ease;
+    position: relative;
+  }
+  .nav-link:hover { color: var(--color-ink-dim); }
   .nav-link[aria-current="page"] { color: var(--color-ink); }
   .nav-link[aria-current="page"]::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: -19px; height: 2px;
-    background: var(--color-ink);
+    content: ""; position: absolute; left: 0; right: 0; bottom: -17px; height: 2px; background: var(--color-credit);
   }
 }
 
-/* staggered reveal on load */
-@keyframes rise {
-  from { opacity: 0; transform: translateY(10px); }
+/* staggered reveal: rows stream onto the desk once, from an already-legible default */
+@keyframes stream {
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .rise > * { opacity: 0; animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
-  .rise > *:nth-child(1) { animation-delay: 0.04s; }
-  .rise > *:nth-child(2) { animation-delay: 0.10s; }
-  .rise > *:nth-child(3) { animation-delay: 0.16s; }
-  .rise > *:nth-child(4) { animation-delay: 0.22s; }
-  .rise > *:nth-child(5) { animation-delay: 0.28s; }
-  .rise > *:nth-child(6) { animation-delay: 0.34s; }
+  .rise > * { opacity: 0; animation: stream 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
+  .rise > *:nth-child(1) { animation-delay: 0.03s; }
+  .rise > *:nth-child(2) { animation-delay: 0.09s; }
+  .rise > *:nth-child(3) { animation-delay: 0.15s; }
+  .rise > *:nth-child(4) { animation-delay: 0.21s; }
+  .rise > *:nth-child(5) { animation-delay: 0.27s; }
+  .rise > *:nth-child(6) { animation-delay: 0.33s; }
 }

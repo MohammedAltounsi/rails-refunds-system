@@ -1,10 +1,9 @@
 <% content_for :title, "Issue a refund" %>
 
 <div class="rise mx-auto max-w-2xl">
-  <div class="mb-10">
-    <p class="eyebrow mb-2.5">Outbound</p>
-    <h1 class="font-display text-4xl tracking-tight text-ink">Issue a refund</h1>
-    <p class="mt-2 text-sm text-ink-soft">
+  <div class="mb-8">
+    <h1 class="desk-title text-3xl text-ink">issue refund</h1>
+    <p class="mt-2 text-sm text-ink-dim">
       The charge row is locked while the remaining refundable amount is checked, so two
       requests can never together refund more than was captured.
     </p>
@@ -13,7 +12,7 @@
   <% charge = @charge %>
   <%= form_with url: refunds_path, method: :post, class: "panel space-y-6 p-7" do %>
     <div>
-      <label class="eyebrow mb-2 block" for="charge_id">Charge</label>
+      <label class="meta mb-2 block" for="charge_id">charge</label>
       <select name="charge_id" id="charge_id" class="field font-mono text-sm">
         <% @charges.each do |c| %>
           <option value="<%= c.id %>" <%= "selected" if charge && c.id == charge.id %>>
@@ -24,22 +23,22 @@
     </div>
 
     <div>
-      <label class="eyebrow mb-2 block" for="amount_cents">Amount <span class="normal-case tracking-normal text-ink-faint">(halalas)</span></label>
+      <label class="meta mb-2 block" for="amount_cents">amount <span class="text-ink-faint">(halalas)</span></label>
       <input type="number" name="amount_cents" id="amount_cents" min="1" required
              class="field font-mono" value="<%= charge&.refundable_cents %>">
-      <p class="mt-2 text-xs text-ink-soft">Integer minor units. 100 halalas = SAR 1.00. No floats anywhere in the money path.</p>
+      <p class="mt-2 font-mono text-xs text-ink-faint">integer minor units · 100 halalas = SAR 1.00 · no floats in the money path</p>
     </div>
 
     <div>
-      <label class="eyebrow mb-2 block" for="idempotency_key">Idempotency key <span class="normal-case tracking-normal text-ink-faint">(optional)</span></label>
+      <label class="meta mb-2 block" for="idempotency_key">idempotency key <span class="text-ink-faint">(optional)</span></label>
       <input type="text" name="idempotency_key" id="idempotency_key" class="field font-mono text-sm"
              placeholder="a stable key from your own retry logic">
-      <p class="mt-2 text-xs text-ink-soft">Leave blank to generate one. Submitting the same key twice issues the refund once — enforced by a unique index, not just a check.</p>
+      <p class="mt-2 text-xs text-ink-dim">Leave blank to generate one. The same key twice issues the refund once, enforced by a unique index, not just a check.</p>
     </div>
 
     <div class="flex items-center gap-4 border-t border-line pt-6">
-      <button type="submit" class="btn btn-primary">Issue refund</button>
-      <%= link_to "Cancel", refunds_path, class: "text-sm text-ink-soft hover:text-ink" %>
+      <button type="submit" class="btn btn-primary">issue refund</button>
+      <%= link_to "cancel", refunds_path, class: "font-mono text-xs text-ink-dim hover:text-ink" %>
     </div>
   <% end %>
 </div>

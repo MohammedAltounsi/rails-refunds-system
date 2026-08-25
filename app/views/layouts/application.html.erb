@@ -20,48 +20,62 @@
   </head>
 
   <body>
-    <header class="border-b border-line bg-panel/70 backdrop-blur">
+    <!--
+      DIRECTION CONTRACT — impeccable, user-pinned (no roll)
+      THESIS: A payments ledger read as a trading desk, not a dashboard of cards.
+        Money is live data in ruled monospace columns; it refuses the metric-tile hero.
+      OWN-WORLD: Near-black console (#0a0c10), hairline rules, one live green for
+        credit, amber in-flight, red reversal. JetBrains Mono for every figure/id,
+        Archivo for the few words. Elevation is the border, never a shadow.
+      STORY: An operator sees, at a glance, that every halala is accounted for and
+        that money moved exactly once, then issues a refund or payout with confidence.
+      FIRST VIEWPORT: A terminal header with a live caret and status line, tab nav,
+        then the register: a ruled table of refunds with mono amounts colored by sign.
+      FORM: Trading terminal / data desk. User-pinned direction, beats the roll.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+    -->
+    <header class="border-b border-line bg-bg-raise">
       <div class="mx-auto max-w-6xl px-6">
-        <div class="flex flex-col gap-4 py-6 sm:flex-row sm:items-end sm:justify-between">
-          <%= link_to root_path, class: "group block" do %>
-            <p class="eyebrow mb-1.5">Payments · Rails 8</p>
-            <h1 class="font-display text-2xl leading-none tracking-tight text-ink">Refunds &amp; Payouts</h1>
+        <div class="flex flex-col gap-3 py-5 sm:flex-row sm:items-center sm:justify-between">
+          <%= link_to root_path, class: "group inline-flex items-baseline gap-0" do %>
+            <span class="desk-title text-lg text-ink">refunds &amp; payouts</span><span class="caret"></span>
           <% end %>
-          <p class="max-w-xs text-sm leading-snug text-ink-soft">
-            A double-entry ledger that stays balanced through partial refunds, reversed exactly once.
+          <p class="font-mono text-xs text-ink-faint">
+            SAR · integer halalas · <span class="text-credit">double-entry</span> · money booked only on a signed webhook
           </p>
         </div>
-        <nav class="flex items-center gap-7 pb-0 text-sm font-medium">
-          <%= link_to "Refunds",        refunds_path,        class: "nav-link py-4", "aria-current": ("page" if current_page?(refunds_path) || current_page?(root_path)) %>
-          <%= link_to "Payouts",        payouts_path,        class: "nav-link py-4", "aria-current": ("page" if current_page?(payouts_path)) %>
-          <%= link_to "Charges",        charges_path,        class: "nav-link py-4", "aria-current": ("page" if current_page?(charges_path)) %>
-          <%= link_to "Ledger",         ledger_path,         class: "nav-link py-4", "aria-current": ("page" if current_page?(ledger_path)) %>
-          <%= link_to "Reconciliation", reconciliation_path, class: "nav-link py-4", "aria-current": ("page" if current_page?(reconciliation_path)) %>
+        <nav class="flex items-center gap-6 overflow-x-auto pb-0 text-sm">
+          <%= link_to "refunds",        refunds_path,        class: "nav-link py-3.5", "aria-current": ("page" if current_page?(refunds_path) || current_page?(root_path)) %>
+          <%= link_to "payouts",        payouts_path,        class: "nav-link py-3.5", "aria-current": ("page" if current_page?(payouts_path)) %>
+          <%= link_to "charges",        charges_path,        class: "nav-link py-3.5", "aria-current": ("page" if current_page?(charges_path)) %>
+          <%= link_to "ledger",         ledger_path,         class: "nav-link py-3.5", "aria-current": ("page" if current_page?(ledger_path)) %>
+          <%= link_to "reconciliation", reconciliation_path, class: "nav-link py-3.5", "aria-current": ("page" if current_page?(reconciliation_path)) %>
         </nav>
       </div>
     </header>
 
-    <main class="mx-auto max-w-6xl px-6 py-12">
+    <main class="mx-auto max-w-6xl px-6 py-10">
       <% if notice %>
-        <div class="mb-8 flex items-start gap-3 rounded-xl border border-[#cfe2d5] bg-credit-soft px-4 py-3 text-sm text-credit">
-          <span class="mt-0.5 font-mono text-xs">✓</span><span><%= notice %></span>
+        <div class="mb-8 flex items-start gap-3 rounded-lg border border-[#1c4c3b] bg-credit-dim px-4 py-3 text-sm text-credit">
+          <span class="mt-0.5 font-mono text-xs">OK</span><span><%= notice %></span>
         </div>
       <% end %>
       <% if alert %>
-        <div class="mb-8 flex items-start gap-3 rounded-xl border border-[#e8cfc6] bg-debit-soft px-4 py-3 text-sm text-debit">
-          <span class="mt-0.5 font-mono text-xs">!</span><span><%= alert %></span>
+        <div class="mb-8 flex items-start gap-3 rounded-lg border border-[#522725] bg-debit-dim px-4 py-3 text-sm text-debit">
+          <span class="mt-0.5 font-mono text-xs">!!</span><span><%= alert %></span>
         </div>
       <% end %>
 
       <%= yield %>
     </main>
 
-    <footer class="mx-auto max-w-6xl px-6 pb-12">
-      <div class="flex flex-col gap-3 border-t border-line pt-6 text-xs text-ink-faint sm:flex-row sm:items-center sm:justify-between">
-        <span><span class="font-mono">SAR</span> · integer halalas, no floats · balances derived from an append-only log · money booked only on a signature-verified webhook</span>
-        <span class="flex gap-4">
-          <%= link_to "Audit trail", audit_path, class: "hover:text-ink" %>
-          <%= link_to "Health", health_path, class: "font-mono hover:text-ink" %>
+    <footer class="mx-auto max-w-6xl px-6 pb-10">
+      <div class="flex flex-col gap-3 border-t border-line pt-5 font-mono text-xs text-ink-faint sm:flex-row sm:items-center sm:justify-between">
+        <span>balances derived from an append-only log · reversed exactly once</span>
+        <span class="flex gap-5">
+          <%= link_to "audit", audit_path, class: "hover:text-credit" %>
+          <%= link_to "health", health_path, class: "hover:text-credit" %>
+          <a href="/openapi.yaml" class="hover:text-credit">api</a>
         </span>
       </div>
     </footer>

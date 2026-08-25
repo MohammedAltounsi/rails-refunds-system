@@ -2,55 +2,55 @@
 
 <div class="rise">
   <div class="mb-8">
-    <p class="eyebrow mb-2.5">Append-only · double-entry</p>
-    <h1 class="font-display text-4xl tracking-tight text-ink">The ledger</h1>
+    <h1 class="desk-title text-3xl text-ink">ledger</h1>
+    <p class="mt-2 text-sm text-ink-dim">Append-only, double-entry. Balances are summed from the log on read, never stored.</p>
   </div>
 
-  <!-- the invariant, stated as the hero -->
-  <div class="panel mb-10 flex flex-col gap-4 p-7 sm:flex-row sm:items-center sm:justify-between">
+  <!-- the invariant, stated as the hero readout -->
+  <div class="panel mb-10 flex flex-col gap-5 p-7 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <p class="eyebrow mb-2">Global sum, every posting ever</p>
-      <p class="font-mono text-4xl font-medium <%= @global_sum.zero? ? 'text-credit' : 'text-debit' %>">
+      <p class="meta mb-3">global sum · every posting ever</p>
+      <p class="font-mono text-5xl font-medium <%= @global_sum.zero? ? 'text-credit' : 'text-debit' %>">
         <%= money(@global_sum) %>
       </p>
     </div>
-    <p class="max-w-xs text-sm leading-snug text-ink-soft sm:text-right">
+    <p class="max-w-xs text-sm leading-snug text-ink-dim sm:text-right">
       Money is only ever moved, never created or destroyed. Every entry's postings sum to zero, so the whole book does too.
     </p>
   </div>
 
-  <div class="grid gap-10 lg:grid-cols-5">
+  <div class="grid gap-8 lg:grid-cols-5">
     <section class="lg:col-span-2">
-      <h2 class="eyebrow mb-3">Accounts</h2>
+      <h2 class="meta mb-3">accounts</h2>
       <div class="panel overflow-hidden">
         <table class="ledger-table">
-          <thead><tr><th>Account</th><th class="text-right">Balance</th></tr></thead>
+          <thead><tr><th>account</th><th class="text-right">balance</th></tr></thead>
           <tbody>
             <% @accounts.each do |account| %>
               <tr>
-                <td class="font-mono text-xs text-ink-soft"><%= account.name %></td>
+                <td class="font-mono text-xs text-ink-dim"><%= account.name %></td>
                 <td class="text-right"><%= amount(account.balance_cents) %></td>
               </tr>
             <% end %>
           </tbody>
         </table>
       </div>
-      <p class="mt-3 text-xs text-ink-faint">Balances are summed from the log on read. There is no stored balance to drift.</p>
+      <p class="mt-3 font-mono text-xs text-ink-faint">no stored balance to drift</p>
     </section>
 
     <section class="lg:col-span-3">
-      <h2 class="eyebrow mb-3">Recent entries</h2>
+      <h2 class="meta mb-3">recent entries</h2>
       <div class="space-y-3">
         <% @entries.each do |entry| %>
           <div class="panel p-5">
             <div class="mb-3 flex items-baseline justify-between gap-4">
-              <p class="font-medium text-ink"><%= entry.memo %></p>
+              <p class="text-sm text-ink"><%= entry.memo %></p>
               <p class="font-mono text-xs text-ink-faint"><%= entry.created_at.strftime("%b %-d · %H:%M") %></p>
             </div>
             <div class="space-y-1.5 border-t border-line pt-3">
               <% entry.postings.each do |p| %>
                 <div class="flex items-baseline justify-between gap-4">
-                  <span class="font-mono text-xs text-ink-soft"><%= p.account.name %></span>
+                  <span class="font-mono text-xs text-ink-dim"><%= p.account.name %></span>
                   <%= amount(p.amount_cents) %>
                 </div>
               <% end %>
@@ -58,7 +58,7 @@
           </div>
         <% end %>
         <% if @entries.empty? %>
-          <div class="panel px-4 py-16 text-center text-sm text-ink-faint">No entries yet.</div>
+          <div class="panel px-4 py-16 text-center font-mono text-sm text-ink-faint">no entries yet</div>
         <% end %>
       </div>
     </section>

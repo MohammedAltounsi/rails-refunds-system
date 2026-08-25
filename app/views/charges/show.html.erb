@@ -1,36 +1,33 @@
 <% content_for :title, @charge.stripe_payment_intent_id %>
 
 <div class="rise">
-  <%= link_to "← Charges", charges_path, class: "text-sm text-ink-soft hover:text-ink" %>
+  <%= link_to "← charges", charges_path, class: "font-mono text-xs text-ink-dim hover:text-ink" %>
 
-  <div class="mt-5 mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-    <div>
-      <p class="eyebrow mb-2.5">Charge</p>
-      <h1 class="font-display text-3xl tracking-tight text-ink font-mono"><%= @charge.stripe_payment_intent_id %></h1>
-    </div>
-    <%= link_to "Issue a refund", new_refund_path(charge_id: @charge.id), class: "btn btn-primary self-start sm:self-auto" %>
+  <div class="mt-4 mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <h1 class="desk-title text-2xl text-ink break-all"><%= @charge.stripe_payment_intent_id %></h1>
+    <%= link_to "issue refund", new_refund_path(charge_id: @charge.id), class: "btn btn-primary self-start sm:self-auto" %>
   </div>
 
-  <div class="mb-12 grid grid-cols-1 gap-4 sm:grid-cols-3">
-    <div class="panel p-5">
-      <p class="eyebrow mb-3">Captured</p>
-      <p class="font-mono text-2xl font-medium text-ink"><%= money(@charge.amount_cents) %></p>
+  <div class="panel mb-10 px-6">
+    <div class="readout">
+      <span class="meta">captured</span>
+      <span class="font-mono text-sm text-ink-dim"><%= money(@charge.amount_cents) %></span>
     </div>
-    <div class="panel p-5">
-      <p class="eyebrow mb-3">Refunded</p>
-      <p class="font-mono text-2xl font-medium text-ink-soft"><%= money(@charge.refunded_cents) %></p>
+    <div class="readout">
+      <span class="meta">refunded</span>
+      <span class="font-mono text-sm text-ink-dim"><%= money(@charge.refunded_cents) %></span>
     </div>
-    <div class="panel p-5">
-      <p class="eyebrow mb-3">Refundable</p>
-      <p class="font-mono text-2xl font-medium text-credit"><%= money(@charge.refundable_cents) %></p>
+    <div class="readout">
+      <span class="meta">refundable</span>
+      <%= amount(@charge.refundable_cents) %>
     </div>
   </div>
 
-  <h2 class="eyebrow mb-3">Refunds against this charge</h2>
-  <div class="panel overflow-hidden">
+  <h2 class="meta mb-3">refunds against this charge</h2>
+  <div class="panel overflow-x-auto">
     <table class="ledger-table">
       <thead>
-        <tr><th>Refund</th><th class="text-right">Amount</th><th>Status</th></tr>
+        <tr><th>refund</th><th class="text-right">amount</th><th>status</th></tr>
       </thead>
       <tbody>
         <% @refunds.each do |refund| %>
@@ -41,7 +38,7 @@
           </tr>
         <% end %>
         <% if @refunds.empty? %>
-          <tr><td colspan="3" class="px-4 py-16 text-center text-sm text-ink-faint">No refunds against this charge.</td></tr>
+          <tr><td colspan="3" class="px-4 py-16 text-center font-mono text-sm text-ink-faint">no refunds against this charge</td></tr>
         <% end %>
       </tbody>
     </table>
