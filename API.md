@@ -1,8 +1,8 @@
 # HTTP surface
 
-This app is server-rendered HTML, not a JSON API. This documents what each
-route actually does and returns, for anyone integrating with it or testing
-it directly. For the webhook Stripe calls, see
+The operator screens are server-rendered HTML; there is also a small JSON API
+(`/api/refunds`) for programmatic use. This documents what each route does and
+returns. For the webhook Stripe calls, see
 [ARCHITECTURE.md](ARCHITECTURE.md#4-webhooks-are-exactly-once-via-an-inbox).
 
 ## `GET /refunds`
@@ -55,12 +55,46 @@ ledger is healthy), and the 15 most recent entries.
 Compares settled refunds against Stripe and reports drift. Cached for 5
 minutes; see [RUNBOOK.md](RUNBOOK.md) for what to do with what it reports.
 
+## Payouts
+
+`GET /payouts`, `GET /payouts/new`, `POST /payouts`, `GET /payouts/:id` mirror
+the refund routes for money going out to a payee. `POST /payouts` takes `payee`,
+`amount_cents`, and an optional `idempotency_key`. Requesting a payout accrues
+the liability; the cash is disbursed only on a verified `payout.paid` webhook.
+
+## JSON API
+
+### `POST /api/refunds`
+
+Issues a refund and returns it as JSON. Honors an `Idempotency-Key` request
+header the same way Stripe's own API does: the same key twice issues the refund
+once and returns the same resource.
+
+```bash
+curl -X POST https://rails-refunds-system.onrender.com/api/refunds \
+  -H "Idempotency-Key: your-stable-key" \
+  -d "charge_id=1&amount_cents=1500"
+```
+
+Returns `201` with the refund, `422 {"error":"over_refund"}` if it would exceed
+the charge's remaining refundable amount, or `404` if the charge is unknown.
+The full spec is at [`/openapi.yaml`](public/openapi.yaml).
+
+### `GET /api/refunds/:id`
+
+The refund as JSON, or `404`.
+
+## `GET /audit`
+
+The audit trail: every issued refund and payout with its actor and action.
+
 ## `POST /webhooks/stripe`
 
 Not for manual or third-party use. Stripe calls this with a signed payload;
 see the webhook controller and `ARCHITECTURE.md` for what it does with each
-event type.
+event type (`refund.updated`, `refund.failed`, `payout.paid`, `payout.failed`).
 
-## `GET /up`
+## `GET /up` and `GET /health`
 
-Health check. Returns 200 if the app booted with no exceptions.
+`/up` is Render's process health check (200 if the app booted). `/health` is a
+richer JSON check that the app can actually reach its database.
