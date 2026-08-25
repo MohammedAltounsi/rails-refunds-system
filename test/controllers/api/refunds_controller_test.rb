@@ -48,6 +48,19 @@ class Api::RefundsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "over_refund", JSON.parse(response.body)["error"]
   end
 
+  test "when ADMIN_PASSWORD is set, the API requires Basic auth to issue a refund" do
+    ENV["ADMIN_PASSWORD"] = "s3cret"
+    c = charge
+    post "/api/refunds", params: { charge_id: c.id, amount_cents: 10_00 }
+    assert_response :unauthorized
+
+    creds = ActionController::HttpAuthentication::Basic.encode_credentials("operator", "s3cret")
+    post "/api/refunds", params: { charge_id: c.id, amount_cents: 10_00 }, headers: { "Authorization" => creds }
+    assert_response :created
+  ensure
+    ENV.delete("ADMIN_PASSWORD")
+  end
+
   test "GET returns a refund and 404s an unknown one" do
     c = charge
     post "/api/refunds", params: { charge_id: c.id, amount_cents: 5_00 }
