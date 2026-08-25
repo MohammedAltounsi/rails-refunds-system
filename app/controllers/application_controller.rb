@@ -6,4 +6,11 @@ class ApplicationController < ActionController::Base
 
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
+
+  # True on the public showcase; false in a real deployment (DEMO_MODE=false).
+  # Gates the "play Stripe's webhook" demo actions and their UI.
+  def demo_mode?
+    Rails.configuration.x.demo_mode
+  end
+  helper_method :demo_mode?
 end

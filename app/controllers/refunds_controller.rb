@@ -31,6 +31,31 @@ class RefundsController < ApplicationController
     redirect_to new_refund_path(charge_id: charge.id), alert: e.message
   end
 
+  # Demo: stand in for Stripe's signed webhook so a visitor can drive a
+  # `processing` refund to its end state by clicking. It calls the SAME
+  # convergent, ordering-tolerant methods a real webhook calls, so the demo is
+  # faithful, not a shortcut. Off in production (demo_mode? false), where only a
+  # signature-verified webhook may settle money — this action then refuses.
+  def simulate
+    return redirect_to(refunds_path, alert: "Demo actions are disabled here.") unless demo_mode?
+
+    refund = Refund.find(params[:id])
+    case params[:outcome]
+    when "succeeded"
+      refund.apply_stripe_succeeded!(stripe_refund_id: refund.stripe_refund_id || "re_demo_#{refund.id}")
+      AuditLog.record!(actor: "demo (simulated webhook)", action: "refund.webhook.succeeded", subject: refund,
+                       detail: "settled #{helpers.money(refund.amount_cents)} — reversal booked to the ledger")
+      redirect_to refund, notice: "Played Stripe's webhook: settled. The reversal is on the ledger; reconciliation stays clean."
+    when "failed"
+      refund.apply_stripe_failed!("demo: simulated Stripe failure")
+      AuditLog.record!(actor: "demo (simulated webhook)", action: "refund.webhook.failed", subject: refund,
+                       detail: "marked failed — no money booked")
+      redirect_to refund, notice: "Played Stripe's webhook: failed. No money moved — the ledger is untouched."
+    else
+      redirect_to refund, alert: "Pick an outcome to simulate."
+    end
+  end
+
   # Demo: re-deliver the settlement webhook for an ALREADY-settled refund and
   # show the ledger is unchanged, a live proof of exactly-once. Restricted to
   # settled refunds on purpose: it must never be a back door that settles a
