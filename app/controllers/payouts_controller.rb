@@ -1,4 +1,6 @@
 class PayoutsController < ApplicationController
+  before_action :require_operator!, only: :create
+
   def index
     @payouts = Payout.order(created_at: :desc).limit(50)
   end
@@ -18,6 +20,8 @@ class PayoutsController < ApplicationController
       amount_cents: params[:amount_cents].to_i,
       idempotency_key: params[:idempotency_key].presence || SecureRandom.uuid
     )
+    AuditLog.record!(actor: current_actor, action: "payout.issue", subject: payout,
+                     detail: "#{helpers.money(payout.amount_cents)} to #{payout.payee}")
     redirect_to payout
   rescue ActiveRecord::RecordInvalid => e
     redirect_to new_payout_path, alert: e.message

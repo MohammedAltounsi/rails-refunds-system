@@ -40,6 +40,10 @@ Rails.application.configure do
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
 
+  # Tag every log line with the request id, so a single webhook or refund can be
+  # traced end to end across the log.
+  config.log_tags = [ :request_id ]
+
   # In-process memory cache. This app caches nothing that holds money, so a
   # durable store (Solid Cache) would add a database table for no benefit.
   config.cache_store = :memory_store

@@ -1,0 +1,68 @@
+openapi: 3.1.0
+info:
+  title: Refunds & Payouts API
+  version: "1.0"
+  description: >
+    Issue and read refunds. Money is booked to a double-entry ledger only when a
+    signature-verified Stripe webhook confirms it. Requests are idempotent on the
+    Idempotency-Key header, the same way Stripe's own API is.
+servers:
+  - url: https://rails-refunds-system.onrender.com
+paths:
+  /api/refunds:
+    post:
+      summary: Issue a refund against a charge
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema: { type: string }
+          description: >
+            A stable key from your retry logic. The same key twice issues the
+            refund once and returns the same resource.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [charge_id, amount_cents]
+              properties:
+                charge_id:    { type: integer, description: The charge to refund against }
+                amount_cents: { type: integer, minimum: 1, description: Integer minor units (halalas) }
+      responses:
+        "201":
+          description: Refund issued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Refund" }
+        "422": { description: Over-refund would exceed the charge's remaining refundable amount }
+        "404": { description: Charge not found }
+  /api/refunds/{id}:
+    get:
+      summary: Read a refund
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: The refund
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Refund" }
+        "404": { description: Not found }
+components:
+  schemas:
+    Refund:
+      type: object
+      properties:
+        id:               { type: integer }
+        status:           { type: string, enum: [requested, processing, settled, failed] }
+        amount_cents:     { type: integer }
+        currency:         { type: string }
+        charge:           { type: string }
+        stripe_refund_id: { type: [string, "null"] }
+        idempotency_key:  { type: string }
+        created_at:       { type: string, format: date-time }
