@@ -1,1 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
+
+/* ==========================================================================
+   "The Ledger" — a warm ivory editorial system for a double-entry payments app.
+   Fraunces (display) · Hanken Grotesk (text) · JetBrains Mono (every figure).
+   ========================================================================== */
+
+@theme {
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+  --color-paper: #f3eee2;
+  --color-paper-edge: #ece5d4;
+  --color-panel: #fbf9f3;
+  --color-ink: #1c1813;
+  --color-ink-soft: #756b5c;
+  --color-ink-faint: #a49a88;
+  --color-line: #e5ddcc;
+  --color-line-strong: #d6ccb7;
+
+  --color-credit: #1f6f4f;      /* emerald — settled, positive, in balance */
+  --color-credit-soft: #e5efe8;
+  --color-debit: #a8432e;       /* oxblood — failed, reversal, drift */
+  --color-debit-soft: #f4e6e0;
+  --color-pending: #916313;     /* amber — processing, in-flight */
+  --color-pending-soft: #f2e8d3;
+
+  --shadow-panel: 0 1px 2px rgba(28, 24, 19, 0.04), 0 8px 24px -12px rgba(28, 24, 19, 0.14);
+  --shadow-lift: 0 2px 4px rgba(28, 24, 19, 0.05), 0 18px 40px -18px rgba(28, 24, 19, 0.22);
+}
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* faint ruled-paper wash: a warm vignette plus a hairline horizontal grid */
+    background-image:
+      radial-gradient(120% 80% at 50% -10%, rgba(255, 252, 244, 0.9) 0%, rgba(243, 238, 226, 0) 55%),
+      repeating-linear-gradient(to bottom, transparent 0, transparent 31px, rgba(28, 24, 19, 0.022) 32px);
+    background-attachment: fixed;
+  }
+
+  ::selection { background: var(--color-credit); color: #fff; }
+
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.01em; }
+
+  /* every figure lines up: fixed-width, tabular */
+  .font-mono, code, .tabular { font-variant-numeric: tabular-nums; }
+
+  a { text-underline-offset: 3px; }
+}
+
+@layer components {
+  /* micro-label above a section or field */
+  .eyebrow {
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--color-ink-faint);
+  }
+
+  /* the card surface, like a leaf of the ledger */
+  .panel {
+    background: var(--color-panel);
+    border: 1px solid var(--color-line);
+    border-radius: 14px;
+    box-shadow: var(--shadow-panel);
+  }
+
+  /* status chip with a leading state dot */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.28rem 0.7rem 0.28rem 0.6rem;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+  }
+  .chip::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 999px;
+    background: currentColor;
+    opacity: 0.9;
+  }
+  .chip-requested { color: var(--color-ink-soft);  background: #efe9db; border-color: var(--color-line); }
+  .chip-processing{ color: var(--color-pending);   background: var(--color-pending-soft); border-color: #e6d6b0; }
+  .chip-settled   { color: var(--color-credit);    background: var(--color-credit-soft);  border-color: #cfe2d5; }
+  .chip-failed    { color: var(--color-debit);     background: var(--color-debit-soft);   border-color: #e8cfc6; }
+
+  /* buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.6rem 1.1rem;
+    border-radius: 10px;
+    font-size: 0.875rem; font-weight: 600;
+    transition: transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease;
+  }
+  .btn-primary {
+    background: var(--color-ink); color: var(--color-paper);
+    box-shadow: 0 1px 2px rgba(28,24,19,0.2), 0 10px 22px -14px rgba(28,24,19,0.8);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-lift); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-ghost { color: var(--color-ink); border: 1px solid var(--color-line-strong); background: transparent; }
+  .btn-ghost:hover { background: #fff; }
+
+  /* form fields */
+  .field {
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--color-line-strong);
+    border-radius: 10px;
+    padding: 0.62rem 0.8rem;
+    font-size: 0.9rem;
+    color: var(--color-ink);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-credit);
+    box-shadow: 0 0 0 3px var(--color-credit-soft);
+  }
+
+  /* data table */
+  .ledger-table { width: 100%; border-collapse: collapse; text-align: left; }
+  .ledger-table thead th {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    font-weight: 600; color: var(--color-ink-faint);
+    padding: 0.7rem 1.1rem; border-bottom: 1px solid var(--color-line);
+  }
+  .ledger-table tbody td { padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--color-line); font-size: 0.9rem; }
+  .ledger-table tbody tr:last-child td { border-bottom: 0; }
+  .ledger-table tbody tr { transition: background 0.12s ease; }
+  .ledger-table tbody tr:hover { background: #fff; }
+
+  /* nav link active state */
+  .nav-link { color: var(--color-ink-soft); transition: color 0.15s ease; position: relative; }
+  .nav-link:hover { color: var(--color-ink); }
+  .nav-link[aria-current="page"] { color: var(--color-ink); }
+  .nav-link[aria-current="page"]::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -19px; height: 2px;
+    background: var(--color-ink);
+  }
+}
+
+/* staggered reveal on load */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rise > * { opacity: 0; animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
+  .rise > *:nth-child(1) { animation-delay: 0.04s; }
+  .rise > *:nth-child(2) { animation-delay: 0.10s; }
+  .rise > *:nth-child(3) { animation-delay: 0.16s; }
+  .rise > *:nth-child(4) { animation-delay: 0.22s; }
+  .rise > *:nth-child(5) { animation-delay: 0.28s; }
+  .rise > *:nth-child(6) { animation-delay: 0.34s; }
+}

@@ -1,71 +1,116 @@
 <% content_for :title, "Reconciliation" %>
 
-<h1 class="mb-6 text-xl font-semibold">Reconciliation</h1>
-
-<p class="mb-6 rounded-md px-4 py-3 text-sm <%= @result.ok? ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-800' %>">
-  <%= @result.ok? ? "Clean — ledger and Stripe agree to the halala." : "Drift detected — see below." %>
-</p>
-
-<dl class="mb-8 grid grid-cols-2 gap-y-4 rounded-lg border border-slate-200 bg-white p-6 text-sm sm:grid-cols-4">
-  <dt class="text-slate-500">Stripe refunds</dt>
-  <dd class="font-medium"><%= @result.stripe_count %></dd>
-  <dt class="text-slate-500">Matched</dt>
-  <dd class="font-medium"><%= @result.matched %></dd>
-  <dt class="text-slate-500">Entries balance</dt>
-  <dd class="font-medium"><%= @result.unbalanced_entries.empty? ? "yes" : "NO (#{@result.unbalanced_entries.size})" %></dd>
-  <dt class="text-slate-500">Ledger sums to zero</dt>
-  <dd class="font-medium"><%= @result.global_sum_cents.zero? ? "yes" : "NO (#{@result.global_sum_cents})" %></dd>
-</dl>
-
-<% if @result.missing.any? %>
-  <h2 class="mb-2 text-sm font-semibold text-rose-700">Missing in ledger (Stripe refunded, we didn't record)</h2>
-  <ul class="mb-6 list-disc pl-5 text-sm text-slate-700">
-    <% @result.missing.each do |m| %>
-      <li><%= m[:stripe_refund_id] %> — <%= money(m[:amount_cents]) %></li>
-    <% end %>
-  </ul>
-<% end %>
-
-<% if @result.mismatched.any? %>
-  <h2 class="mb-2 text-sm font-semibold text-rose-700">Amount mismatches</h2>
-  <ul class="mb-6 list-disc pl-5 text-sm text-slate-700">
-    <% @result.mismatched.each do |m| %>
-      <li><%= m[:stripe_refund_id] %> — Stripe <%= money(m[:stripe_cents]) %>, ledger <%= money(m[:ledger_cents]) %></li>
-    <% end %>
-  </ul>
-<% end %>
-
-<% if @result.orphans.any? %>
-  <h2 class="mb-2 text-sm font-semibold text-rose-700">Orphan reversals (settled in ledger, no matching Stripe refund)</h2>
-  <ul class="mb-6 list-disc pl-5 text-sm text-slate-700">
-    <% @result.orphans.each do |o| %>
-      <li>refund #<%= o[:refund_id] %> — <%= money(o[:ledger_cents]) %></li>
-    <% end %>
-  </ul>
-<% end %>
-
-<h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Webhook inbox</h2>
-<p class="mb-3 text-sm text-slate-600">
-  <% @events.each do |status, count| %>
-    <span class="mr-4"><%= status %>: <%= count %></span>
-  <% end %>
-</p>
-
-<% if @failed_events.any? %>
-  <div class="overflow-hidden rounded-lg border border-slate-200 bg-white">
-    <table class="w-full text-left text-sm">
-      <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-        <tr><th class="px-4 py-3">Event</th><th class="px-4 py-3">Type</th><th class="px-4 py-3">Error</th></tr>
-      </thead>
-      <tbody class="divide-y divide-slate-100">
-        <% @failed_events.each do |event| %>
-          <tr>
-            <td class="px-4 py-3 font-mono text-xs"><%= event.event_id %></td>
-            <td class="px-4 py-3"><%= event.event_type %></td>
-            <td class="px-4 py-3 text-rose-700"><%= event.error %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+<div class="rise">
+  <div class="mb-8">
+    <p class="eyebrow mb-2.5">Ledger vs Stripe</p>
+    <h1 class="font-display text-4xl tracking-tight text-ink">Reconciliation</h1>
   </div>
-<% end %>
+
+  <div class="panel mb-10 flex items-center gap-4 p-6 <%= @result.ok? ? '' : 'border-[#e8cfc6]' %>">
+    <span class="chip <%= @result.ok? ? 'chip-settled' : 'chip-failed' %>"><%= @result.ok? ? "Clean" : "Drift" %></span>
+    <p class="text-sm text-ink-soft">
+      <%= @result.ok? ? "The ledger and Stripe agree to the halala." : "The ledger and Stripe disagree. See the breakdown below." %>
+    </p>
+  </div>
+
+  <div class="mb-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
+    <div class="panel p-5">
+      <p class="eyebrow mb-3">Stripe refunds</p>
+      <p class="font-mono text-3xl font-medium text-ink"><%= @result.stripe_count %></p>
+    </div>
+    <div class="panel p-5">
+      <p class="eyebrow mb-3">Matched</p>
+      <p class="font-mono text-3xl font-medium text-ink"><%= @result.matched %></p>
+    </div>
+    <div class="panel p-5">
+      <p class="eyebrow mb-3">Entries balance</p>
+      <p class="font-mono text-3xl font-medium <%= @result.unbalanced_entries.empty? ? 'text-credit' : 'text-debit' %>">
+        <%= @result.unbalanced_entries.empty? ? "yes" : @result.unbalanced_entries.size %>
+      </p>
+    </div>
+    <div class="panel p-5">
+      <p class="eyebrow mb-3">Sums to zero</p>
+      <p class="font-mono text-3xl font-medium <%= @result.global_sum_cents.zero? ? 'text-credit' : 'text-debit' %>">
+        <%= @result.global_sum_cents.zero? ? "yes" : "no" %>
+      </p>
+    </div>
+  </div>
+
+  <% drift = @result.missing.any? || @result.mismatched.any? || @result.orphans.any? %>
+  <% if drift %>
+    <div class="mb-12 space-y-6">
+      <% if @result.missing.any? %>
+        <div class="panel p-6">
+          <h2 class="mb-1 font-display text-lg text-debit">Missing in ledger</h2>
+          <p class="mb-4 text-xs text-ink-soft">Stripe refunded, but we never recorded it — a dropped webhook.</p>
+          <ul class="space-y-2">
+            <% @result.missing.each do |m| %>
+              <li class="flex items-baseline justify-between gap-4 border-t border-line pt-2">
+                <span class="font-mono text-xs text-ink-soft"><%= m[:stripe_refund_id] %></span>
+                <%= amount(m[:amount_cents]) %>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <% if @result.mismatched.any? %>
+        <div class="panel p-6">
+          <h2 class="mb-1 font-display text-lg text-debit">Amount mismatches</h2>
+          <p class="mb-4 text-xs text-ink-soft">Recorded, but for a different amount than Stripe.</p>
+          <ul class="space-y-2">
+            <% @result.mismatched.each do |m| %>
+              <li class="flex items-baseline justify-between gap-4 border-t border-line pt-2">
+                <span class="font-mono text-xs text-ink-soft"><%= m[:stripe_refund_id] %></span>
+                <span class="font-mono text-xs">Stripe <%= money(m[:stripe_cents]) %> · ledger <%= money(m[:ledger_cents]) %></span>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <% if @result.orphans.any? %>
+        <div class="panel p-6">
+          <h2 class="mb-1 font-display text-lg text-debit">Orphan reversals</h2>
+          <p class="mb-4 text-xs text-ink-soft">Settled in the ledger with no matching Stripe refund — money leaving the books from nowhere.</p>
+          <ul class="space-y-2">
+            <% @result.orphans.each do |o| %>
+              <li class="flex items-baseline justify-between gap-4 border-t border-line pt-2">
+                <span class="font-mono text-xs text-ink-soft">refund #<%= o[:refund_id] %></span>
+                <%= amount(o[:ledger_cents]) %>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <section>
+    <h2 class="eyebrow mb-3">Webhook inbox</h2>
+    <div class="mb-4 flex flex-wrap gap-2">
+      <% @events.each do |status, count| %>
+        <span class="chip chip-requested"><%= status %> · <%= count %></span>
+      <% end %>
+    </div>
+
+    <% if @failed_events.any? %>
+      <div class="panel overflow-hidden">
+        <table class="ledger-table">
+          <thead><tr><th>Event</th><th>Type</th><th>Error</th></tr></thead>
+          <tbody>
+            <% @failed_events.each do |event| %>
+              <tr>
+                <td class="font-mono text-xs text-ink-soft"><%= event.event_id %></td>
+                <td class="font-mono text-xs"><%= event.event_type %></td>
+                <td class="text-sm text-debit"><%= event.error %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-xs text-ink-faint">No failed events. Every delivery was verified, deduped, and processed once.</p>
+    <% end %>
+  </section>
+</div>

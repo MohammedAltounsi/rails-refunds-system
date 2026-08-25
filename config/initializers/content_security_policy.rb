@@ -13,8 +13,8 @@ Rails.application.configure do
     policy.object_src      :none
     policy.frame_ancestors :none
     policy.img_src         :self, :data
-    policy.font_src        :self, :data
-    policy.style_src       :self, :unsafe_inline
+    policy.font_src        :self, :data, "https://fonts.gstatic.com"
+    policy.style_src       :self, :unsafe_inline, "https://fonts.googleapis.com"
     policy.script_src      :self
     policy.connect_src     :self
   end

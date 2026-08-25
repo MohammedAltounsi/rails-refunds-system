@@ -3,15 +3,25 @@ module ApplicationHelper
     "#{currency} #{'%.2f' % (cents / 100.0)}"
   end
 
-  STATUS_CLASSES = {
-    "requested"  => "bg-slate-100 text-slate-700",
-    "processing" => "bg-amber-100 text-amber-800",
-    "settled"    => "bg-emerald-100 text-emerald-800",
-    "failed"     => "bg-rose-100 text-rose-800"
+  # Money as a tabular monospace figure, colored by sign: credits (positive)
+  # emerald, debits/reversals (negative) oxblood. Zero stays ink.
+  def amount(cents, currency: "SAR")
+    color =
+      if cents.positive? then "text-credit"
+      elsif cents.negative? then "text-debit"
+      else "text-ink"
+      end
+    tag.span(money(cents, currency: currency), class: "font-mono text-sm #{color}")
+  end
+
+  CHIP_CLASSES = {
+    "requested"  => "chip-requested",
+    "processing" => "chip-processing",
+    "settled"    => "chip-settled",
+    "failed"     => "chip-failed"
   }.freeze
 
   def status_badge(status)
-    classes = STATUS_CLASSES.fetch(status, "bg-slate-100 text-slate-700")
-    tag.span(status, class: "inline-block rounded-full px-2.5 py-0.5 text-xs font-medium #{classes}")
+    tag.span(status, class: "chip #{CHIP_CLASSES.fetch(status, 'chip-requested')}")
   end
 end
