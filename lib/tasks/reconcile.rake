@@ -5,6 +5,7 @@ task reconcile: :environment do
   puts ""
   puts "  REFUNDS & PAYOUTS — LEDGER RECONCILIATION"
   puts "  " + ("─" * 46)
+  puts "  Stripe reachable:         #{r.stripe_reachable ? 'yes' : 'NO'}"
   puts "  Stripe refunds (settled): #{r.stripe_count}"
   puts "  Matched to ledger:        #{r.matched}"
   puts "  Every entry balances:     #{r.unbalanced_entries.empty? ? 'yes' : "NO (#{r.unbalanced_entries.size})"}"
@@ -25,7 +26,11 @@ task reconcile: :environment do
   end
 
   puts ""
-  if r.ok?
+  if r.unreachable?
+    puts "  ? UNREACHABLE — could not reach Stripe; ledger invariants #{r.invariants_hold? ? 'hold' : 'FAILED'}."
+    puts ""
+    exit 2
+  elsif r.ok?
     puts "  ✓ CLEAN — ledger and Stripe agree to the halala."
     puts ""
   else

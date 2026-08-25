@@ -98,4 +98,51 @@ class RefundTest < ActiveSupport::TestCase
     assert_equal 0, Posting.sum(:amount_cents), "the whole ledger must always sum to zero"
     assert_equal 10_00 - 4_00, Ledger.account(Ledger::REVENUE_ACCOUNT).balance_cents
   end
+
+  # --- Convergent webhook boundary (out-of-order / at-least-once delivery) ---
+
+  test "apply_stripe_succeeded! settles an out-of-order early event, before processing was ever recorded" do
+    refund = Refund.request!(charge: @charge, amount_cents: 4_00, idempotency_key: "early")
+    assert_equal "requested", refund.status
+
+    refund.apply_stripe_succeeded!(stripe_refund_id: "re_early") # succeeded arrived before we marked processing
+
+    assert_equal "settled", refund.reload.status
+    assert_equal "re_early", refund.stripe_refund_id
+    assert_equal 10_00 - 4_00, Ledger.account(Ledger::REVENUE_ACCOUNT).balance_cents
+  end
+
+  test "apply_stripe_succeeded! recovers a refund wrongly marked failed on an ambiguous Stripe error" do
+    refund = Refund.request!(charge: @charge, amount_cents: 4_00, idempotency_key: "amb")
+    refund.fail!("stripe: timeout, unknown outcome")   # we gave up, but Stripe actually did refund
+    assert_equal "failed", refund.status
+
+    refund.apply_stripe_succeeded!(stripe_refund_id: "re_amb")
+
+    assert_equal "settled", refund.reload.status
+    assert_nil refund.failure_reason
+    assert_equal 10_00 - 4_00, Ledger.account(Ledger::REVENUE_ACCOUNT).balance_cents, "the money Stripe moved is now booked"
+  end
+
+  test "apply_stripe_succeeded! is idempotent under redelivery — books once" do
+    refund = Refund.request!(charge: @charge, amount_cents: 4_00, idempotency_key: "idem")
+    refund.mark_processing!(stripe_refund_id: "re_idem")
+
+    3.times { refund.apply_stripe_succeeded!(stripe_refund_id: "re_idem") }
+
+    assert_equal 1, Entry.where(idempotency_key: "refund-settle:#{refund.id}").count
+    assert_equal 10_00 - 4_00, Ledger.account(Ledger::REVENUE_ACCOUNT).balance_cents
+  end
+
+  test "apply_stripe_failed! never un-books a settled refund (a late failed is ignored)" do
+    refund = Refund.request!(charge: @charge, amount_cents: 4_00, idempotency_key: "late")
+    refund.mark_processing!(stripe_refund_id: "re_late")
+    refund.settle!
+    before = Posting.sum(:amount_cents)
+
+    refund.apply_stripe_failed!("stripe: too late")   # a stale/late failed after settle
+
+    assert_equal "settled", refund.reload.status, "settled money is never un-booked"
+    assert_equal before, Posting.sum(:amount_cents)
+  end
 end

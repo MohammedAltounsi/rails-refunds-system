@@ -1,8 +1,15 @@
-# Rate-limiting for the public, always-on deploy. Counters live in Rails.cache
-# (solid_cache in production). rack-attack auto-inserts its middleware via a
-# Railtie, so configuring it here is enough.
+# Rate-limiting for the public, always-on deploy. rack-attack auto-inserts its
+# middleware via a Railtie, so configuring it here is enough.
+#
+# Counters live in a process-local memory store, which is correct ONLY because
+# the deploy runs a single Puma worker (WEB_CONCURRENCY=1, see render.yaml — the
+# 512 MB Starter instance can't hold more). With one process the count is global.
+# ponytail: per-process store, single worker. If WEB_CONCURRENCY ever rises,
+# back this with a shared store (Redis or solid_cache) or the limit multiplies
+# by worker count.
 class Rack::Attack
   Rack::Attack.enabled = !Rails.env.test?
+  Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new
 
   # Static assets and the healthcheck never count against a limit.
   safelist("assets/health") do |req|

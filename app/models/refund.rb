@@ -46,19 +46,15 @@ class Refund < ApplicationRecord
     end
   end
 
-  # Settle on the verified `refund.updated` webhook: flip the status AND post
-  # the balancing ledger reversal in the same locked transaction, keyed on
-  # this refund, so a redelivered webhook reverses the money exactly once.
+  # Strict settle, for the internal happy path (seed, and the FSM contract
+  # tests): only a `processing` refund may settle. Flips the status AND posts
+  # the balancing ledger reversal in the same locked transaction, keyed on this
+  # refund, so a repeat is a no-op.
   def settle!
     with_lock do
-      next if status == "settled"   # already settled by an earlier delivery
+      next if status == "settled"   # already settled by an earlier call
       transition_to!("settled")
-      Ledger.post!(
-        "refund #{id} for charge #{charge.stripe_payment_intent_id}",
-        [ [ Ledger.account(Ledger::REVENUE_ACCOUNT), -amount_cents ],
-         [ Ledger.account(Ledger::CASH_ACCOUNT), amount_cents ] ],
-        key: "refund-settle:#{id}"
-      )
+      post_reversal!
     end
   end
 
@@ -69,7 +65,49 @@ class Refund < ApplicationRecord
     end
   end
 
+  # --- Webhook boundary: convergent, ordering-tolerant --------------------
+  #
+  # Stripe delivers events at-least-once and out of order. The strict FSM above
+  # is right for our own code, but wrong at the webhook edge: a `succeeded`
+  # event can arrive before we recorded `processing`, or after a crash left the
+  # row `failed`, and raising there would 500-loop Stripe's retries forever and
+  # never book money Stripe already moved. So the webhook calls these instead.
+
+  # A signature-verified Stripe "succeeded" is authoritative: the money left.
+  # Converge to settled from ANY non-settled state and book the reversal exactly
+  # once (Ledger.post! is keyed). Idempotent under redelivery.
+  def apply_stripe_succeeded!(stripe_refund_id: nil)
+    with_lock do
+      self.stripe_refund_id ||= stripe_refund_id
+      next if status == "settled"   # already booked by an earlier delivery
+      # If this row was marked `failed` on an ambiguous Stripe error, Stripe now
+      # confirms it actually succeeded — the over-refund CONSTRAINT TRIGGER is
+      # the backstop if the reserve was reused in between.
+      update!(status: "settled", failure_reason: nil)
+      post_reversal!
+    end
+  end
+
+  # A verified Stripe "failed". Never un-books a settled refund (a late/stale
+  # failed after a succeed is ignored); otherwise records the failure once.
+  def apply_stripe_failed!(reason)
+    with_lock do
+      next if status == "settled"   # money already booked; a stale failed is ignored
+      next if status == "failed"
+      update!(status: "failed", failure_reason: reason.to_s.first(500))
+    end
+  end
+
   private
+
+  def post_reversal!
+    Ledger.post!(
+      "refund #{id} for charge #{charge.stripe_payment_intent_id}",
+      [ [ Ledger.account(Ledger::REVENUE_ACCOUNT), -amount_cents ],
+       [ Ledger.account(Ledger::CASH_ACCOUNT), amount_cents ] ],
+      key: "refund-settle:#{id}"
+    )
+  end
 
   def transition_to!(new_status)
     allowed = TRANSITIONS.fetch(status, [])

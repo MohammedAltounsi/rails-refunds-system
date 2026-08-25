@@ -50,4 +50,31 @@ class ReconciliationServiceTest < ActiveSupport::TestCase
     assert_includes result.orphans.map { |o| o[:stripe_refund_id] }, "re_orphan"
     refute result.ok?, "missing, mismatch, or orphan must fail reconciliation"
   end
+
+  test "a settled refund with no stripe_refund_id is flagged as an orphan, not silently ignored" do
+    # Force a settled refund whose stripe_refund_id is null — invisible to the
+    # id-keyed match, so it must be surfaced explicitly.
+    charge = Charge.capture!(stripe_payment_intent_id: "pi_#{SecureRandom.hex(4)}", amount_cents: 20_00)
+    refund = Refund.request!(charge: charge, amount_cents: 20_00, idempotency_key: "nullid")
+    refund.apply_stripe_succeeded!   # settles with no stripe_refund_id passed
+
+    assert_nil refund.reload.stripe_refund_id
+    result = ReconciliationService.run(stripe: {})
+
+    orphan = result.orphans.find { |o| o[:refund_id] == refund.id }
+    assert orphan, "a settled refund with a null stripe id must be an orphan"
+    assert_nil orphan[:stripe_refund_id]
+    refute result.ok?
+  end
+
+  test "when Stripe is unreachable it reports unreachable, not a flood of orphans" do
+    settle("re_x", 10_00)
+
+    result = ReconciliationService.run(stripe: {}, stripe_reachable: false)
+
+    assert result.unreachable?
+    refute result.ok?, "unreachable is not clean"
+    assert_empty result.orphans, "an outage must not reclassify every settled refund as an orphan"
+    assert result.invariants_hold?, "internal invariants are still checkable offline"
+  end
 end

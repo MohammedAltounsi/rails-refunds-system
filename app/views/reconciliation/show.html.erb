@@ -6,12 +6,22 @@
     <h1 class="font-display text-4xl tracking-tight text-ink">Reconciliation</h1>
   </div>
 
-  <div class="panel mb-10 flex items-center gap-4 p-6 <%= @result.ok? ? '' : 'border-[#e8cfc6]' %>">
-    <span class="chip <%= @result.ok? ? 'chip-settled' : 'chip-failed' %>"><%= @result.ok? ? "Clean" : "Drift" %></span>
-    <p class="text-sm text-ink-soft">
-      <%= @result.ok? ? "The ledger and Stripe agree to the halala." : "The ledger and Stripe disagree. See the breakdown below." %>
-    </p>
-  </div>
+  <% if @result.unreachable? %>
+    <div class="panel mb-10 flex items-center gap-4 border-[#e6d6b0] p-6">
+      <span class="chip chip-processing">Unreachable</span>
+      <p class="text-sm text-ink-soft">
+        Stripe could not be reached, so the ledger cannot be matched right now.
+        Internal invariants <%= @result.invariants_hold? ? "still hold." : "FAILED — see below." %>
+      </p>
+    </div>
+  <% else %>
+    <div class="panel mb-10 flex items-center gap-4 p-6 <%= @result.ok? ? '' : 'border-[#e8cfc6]' %>">
+      <span class="chip <%= @result.ok? ? 'chip-settled' : 'chip-failed' %>"><%= @result.ok? ? "Clean" : "Drift" %></span>
+      <p class="text-sm text-ink-soft">
+        <%= @result.ok? ? "The ledger and Stripe agree to the halala." : "The ledger and Stripe disagree. See the breakdown below." %>
+      </p>
+    </div>
+  <% end %>
 
   <div class="mb-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
     <div class="panel p-5">
@@ -76,7 +86,7 @@
           <ul class="space-y-2">
             <% @result.orphans.each do |o| %>
               <li class="flex items-baseline justify-between gap-4 border-t border-line pt-2">
-                <span class="font-mono text-xs text-ink-soft">refund #<%= o[:refund_id] %></span>
+                <span class="font-mono text-xs text-ink-soft">refund #<%= o[:refund_id] %> · <%= o[:stripe_refund_id] || "no stripe id" %></span>
                 <%= amount(o[:ledger_cents]) %>
               </li>
             <% end %>

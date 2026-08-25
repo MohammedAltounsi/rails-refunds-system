@@ -46,23 +46,24 @@ module Webhooks
       end
     end
 
-    # A refund we created has a status change. We only act on the two
-    # terminal-adjacent states: succeeded books the reversal, failed records
-    # why. Anything else (e.g. "pending") is a no-op — nothing to settle yet.
+    # A refund we created has a status change. `succeeded` books the reversal,
+    # `failed` records why, anything else (e.g. "pending") is a no-op. These
+    # call the convergent, ordering-tolerant methods (not the strict FSM), so
+    # an out-of-order or redelivered event never raises into the 500 path.
     def handle_refund_updated(stripe_refund)
       refund = find_refund(stripe_refund)
       return unless refund
 
       case stripe_refund.status
-      when "succeeded" then refund.settle! unless refund.status == "settled"
-      when "failed"    then refund.fail!("stripe: #{stripe_refund.failure_reason}") if refund.status != "failed"
+      when "succeeded" then refund.apply_stripe_succeeded!(stripe_refund_id: stripe_refund.id)
+      when "failed"    then refund.apply_stripe_failed!("stripe: #{stripe_refund.failure_reason}")
       end
     end
 
     def handle_refund_failed(stripe_refund)
       refund = find_refund(stripe_refund)
       return unless refund
-      refund.fail!("stripe: #{stripe_refund.failure_reason}") if refund.status != "failed"
+      refund.apply_stripe_failed!("stripe: #{stripe_refund.failure_reason}")
     end
 
     def find_refund(stripe_refund)
