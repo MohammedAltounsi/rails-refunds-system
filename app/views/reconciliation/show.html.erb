@@ -2,61 +2,56 @@
 
 <div class="rise">
   <div class="mb-8">
-    <p class="eyebrow mb-2.5">Ledger vs Stripe</p>
-    <h1 class="font-display text-4xl tracking-tight text-ink">Reconciliation</h1>
+    <h1 class="desk-title text-3xl text-ink">reconciliation</h1>
+    <p class="mt-2 text-sm text-ink-dim">Ledger versus Stripe, to the halala.</p>
   </div>
 
   <% if @result.unreachable? %>
-    <div class="panel mb-10 flex items-center gap-4 border-[#e6d6b0] p-6">
-      <span class="chip chip-processing">Unreachable</span>
-      <p class="text-sm text-ink-soft">
+    <div class="panel mb-8 flex items-center gap-4 border-[#4a3a18] p-6">
+      <span class="chip chip-processing">unreachable</span>
+      <p class="text-sm text-ink-dim">
         Stripe could not be reached, so the ledger cannot be matched right now.
-        Internal invariants <%= @result.invariants_hold? ? "still hold." : "FAILED — see below." %>
+        Internal invariants <%= @result.invariants_hold? ? "still hold." : "FAILED, see below." %>
       </p>
     </div>
   <% else %>
-    <div class="panel mb-10 flex items-center gap-4 p-6 <%= @result.ok? ? '' : 'border-[#e8cfc6]' %>">
-      <span class="chip <%= @result.ok? ? 'chip-settled' : 'chip-failed' %>"><%= @result.ok? ? "Clean" : "Drift" %></span>
-      <p class="text-sm text-ink-soft">
+    <div class="panel mb-8 flex items-center gap-4 p-6 <%= @result.ok? ? '' : 'border-[#522725]' %>">
+      <span class="chip <%= @result.ok? ? 'chip-settled' : 'chip-failed' %>"><%= @result.ok? ? "clean" : "drift" %></span>
+      <p class="text-sm text-ink-dim">
         <%= @result.ok? ? "The ledger and Stripe agree to the halala." : "The ledger and Stripe disagree. See the breakdown below." %>
       </p>
     </div>
   <% end %>
 
-  <div class="mb-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
-    <div class="panel p-5">
-      <p class="eyebrow mb-3">Stripe refunds</p>
-      <p class="font-mono text-3xl font-medium text-ink"><%= @result.stripe_count %></p>
+  <div class="panel mb-10 px-6">
+    <div class="readout">
+      <span class="meta">stripe refunds (settled)</span>
+      <span class="font-mono text-sm text-ink"><%= @result.stripe_count %></span>
     </div>
-    <div class="panel p-5">
-      <p class="eyebrow mb-3">Matched</p>
-      <p class="font-mono text-3xl font-medium text-ink"><%= @result.matched %></p>
+    <div class="readout">
+      <span class="meta">matched to ledger</span>
+      <span class="font-mono text-sm text-ink"><%= @result.matched %></span>
     </div>
-    <div class="panel p-5">
-      <p class="eyebrow mb-3">Entries balance</p>
-      <p class="font-mono text-3xl font-medium <%= @result.unbalanced_entries.empty? ? 'text-credit' : 'text-debit' %>">
-        <%= @result.unbalanced_entries.empty? ? "yes" : @result.unbalanced_entries.size %>
-      </p>
+    <div class="readout">
+      <span class="meta">every entry balances</span>
+      <span class="font-mono text-sm <%= @result.unbalanced_entries.empty? ? 'text-credit' : 'text-debit' %>"><%= @result.unbalanced_entries.empty? ? "yes" : "NO (#{@result.unbalanced_entries.size})" %></span>
     </div>
-    <div class="panel p-5">
-      <p class="eyebrow mb-3">Sums to zero</p>
-      <p class="font-mono text-3xl font-medium <%= @result.global_sum_cents.zero? ? 'text-credit' : 'text-debit' %>">
-        <%= @result.global_sum_cents.zero? ? "yes" : "no" %>
-      </p>
+    <div class="readout">
+      <span class="meta">ledger sums to zero</span>
+      <span class="font-mono text-sm <%= @result.global_sum_cents.zero? ? 'text-credit' : 'text-debit' %>"><%= @result.global_sum_cents.zero? ? "yes" : "NO" %></span>
     </div>
   </div>
 
-  <% drift = @result.missing.any? || @result.mismatched.any? || @result.orphans.any? %>
-  <% if drift %>
-    <div class="mb-12 space-y-6">
+  <% if @result.missing.any? || @result.mismatched.any? || @result.orphans.any? %>
+    <div class="mb-10 space-y-4">
       <% if @result.missing.any? %>
         <div class="panel p-6">
-          <h2 class="mb-1 font-display text-lg text-debit">Missing in ledger</h2>
-          <p class="mb-4 text-xs text-ink-soft">Stripe refunded, but we never recorded it — a dropped webhook.</p>
+          <h2 class="font-mono text-sm text-debit">missing in ledger</h2>
+          <p class="mb-4 mt-1 text-xs text-ink-dim">Stripe refunded, but we never recorded it, a dropped webhook.</p>
           <ul class="space-y-2">
             <% @result.missing.each do |m| %>
               <li class="flex items-baseline justify-between gap-4 border-t border-line pt-2">
-                <span class="font-mono text-xs text-ink-soft"><%= m[:stripe_refund_id] %></span>
+                <span class="font-mono text-xs text-ink-dim"><%= m[:stripe_refund_id] %></span>
                 <%= amount(m[:amount_cents]) %>
               </li>
             <% end %>
@@ -66,13 +61,13 @@
 
       <% if @result.mismatched.any? %>
         <div class="panel p-6">
-          <h2 class="mb-1 font-display text-lg text-debit">Amount mismatches</h2>
-          <p class="mb-4 text-xs text-ink-soft">Recorded, but for a different amount than Stripe.</p>
+          <h2 class="font-mono text-sm text-debit">amount mismatches</h2>
+          <p class="mb-4 mt-1 text-xs text-ink-dim">Recorded, but for a different amount than Stripe.</p>
           <ul class="space-y-2">
             <% @result.mismatched.each do |m| %>
               <li class="flex items-baseline justify-between gap-4 border-t border-line pt-2">
-                <span class="font-mono text-xs text-ink-soft"><%= m[:stripe_refund_id] %></span>
-                <span class="font-mono text-xs">Stripe <%= money(m[:stripe_cents]) %> · ledger <%= money(m[:ledger_cents]) %></span>
+                <span class="font-mono text-xs text-ink-dim"><%= m[:stripe_refund_id] %></span>
+                <span class="font-mono text-xs text-ink">stripe <%= money(m[:stripe_cents]) %> · ledger <%= money(m[:ledger_cents]) %></span>
               </li>
             <% end %>
           </ul>
@@ -81,12 +76,12 @@
 
       <% if @result.orphans.any? %>
         <div class="panel p-6">
-          <h2 class="mb-1 font-display text-lg text-debit">Orphan reversals</h2>
-          <p class="mb-4 text-xs text-ink-soft">Settled in the ledger with no matching Stripe refund — money leaving the books from nowhere.</p>
+          <h2 class="font-mono text-sm text-debit">orphan reversals</h2>
+          <p class="mb-4 mt-1 text-xs text-ink-dim">Settled in the ledger with no matching Stripe refund, money leaving the books from nowhere.</p>
           <ul class="space-y-2">
             <% @result.orphans.each do |o| %>
               <li class="flex items-baseline justify-between gap-4 border-t border-line pt-2">
-                <span class="font-mono text-xs text-ink-soft">refund #<%= o[:refund_id] %> · <%= o[:stripe_refund_id] || "no stripe id" %></span>
+                <span class="font-mono text-xs text-ink-dim">refund #<%= o[:refund_id] %> · <%= o[:stripe_refund_id] || "no stripe id" %></span>
                 <%= amount(o[:ledger_cents]) %>
               </li>
             <% end %>
@@ -97,18 +92,18 @@
   <% end %>
 
   <% if @recent_runs.any? %>
-    <section class="mb-12">
-      <h2 class="eyebrow mb-3">Reconciliation history</h2>
-      <p class="mb-3 text-xs text-ink-faint">Every run is stored, so drift has a timeline. A scheduled job (or each page view) records one.</p>
-      <div class="panel overflow-hidden">
+    <section class="mb-10">
+      <h2 class="meta mb-3">reconciliation history</h2>
+      <p class="mb-3 font-mono text-xs text-ink-faint">every run is stored, so drift has a timeline</p>
+      <div class="panel overflow-x-auto">
         <table class="ledger-table">
-          <thead><tr><th>When</th><th>Status</th><th class="text-right">Matched</th><th class="text-right">Missing</th><th class="text-right">Mismatch</th><th class="text-right">Orphan</th></tr></thead>
+          <thead><tr><th>when</th><th>status</th><th class="text-right">matched</th><th class="text-right">missing</th><th class="text-right">mismatch</th><th class="text-right">orphan</th></tr></thead>
           <tbody>
             <% @recent_runs.each do |run| %>
               <tr>
-                <td class="font-mono text-xs text-ink-soft"><%= run.created_at.strftime("%b %-d · %H:%M") %></td>
+                <td class="font-mono text-xs text-ink-dim"><%= run.created_at.strftime("%b %-d · %H:%M") %></td>
                 <td><span class="chip <%= run.clean? ? 'chip-settled' : run.unreachable? ? 'chip-processing' : 'chip-failed' %>"><%= run.status %></span></td>
-                <td class="text-right font-mono text-xs"><%= run.matched %></td>
+                <td class="text-right font-mono text-xs text-ink"><%= run.matched %></td>
                 <td class="text-right font-mono text-xs <%= run.missing_count.zero? ? 'text-ink-faint' : 'text-debit' %>"><%= run.missing_count %></td>
                 <td class="text-right font-mono text-xs <%= run.mismatched_count.zero? ? 'text-ink-faint' : 'text-debit' %>"><%= run.mismatched_count %></td>
                 <td class="text-right font-mono text-xs <%= run.orphan_count.zero? ? 'text-ink-faint' : 'text-debit' %>"><%= run.orphan_count %></td>
@@ -121,7 +116,7 @@
   <% end %>
 
   <section>
-    <h2 class="eyebrow mb-3">Webhook inbox</h2>
+    <h2 class="meta mb-3">webhook inbox</h2>
     <div class="mb-4 flex flex-wrap gap-2">
       <% @events.each do |status, count| %>
         <span class="chip chip-requested"><%= status %> · <%= count %></span>
@@ -129,14 +124,14 @@
     </div>
 
     <% if @failed_events.any? %>
-      <div class="panel overflow-hidden">
+      <div class="panel overflow-x-auto">
         <table class="ledger-table">
-          <thead><tr><th>Event</th><th>Type</th><th>Error</th></tr></thead>
+          <thead><tr><th>event</th><th>type</th><th>error</th></tr></thead>
           <tbody>
             <% @failed_events.each do |event| %>
               <tr>
-                <td class="font-mono text-xs text-ink-soft"><%= event.event_id %></td>
-                <td class="font-mono text-xs"><%= event.event_type %></td>
+                <td class="font-mono text-xs text-ink-dim"><%= event.event_id %></td>
+                <td class="font-mono text-xs text-ink"><%= event.event_type %></td>
                 <td class="text-sm text-debit"><%= event.error %></td>
               </tr>
             <% end %>
@@ -144,7 +139,7 @@
         </table>
       </div>
     <% else %>
-      <p class="text-xs text-ink-faint">No failed events. Every delivery was verified, deduped, and processed once.</p>
+      <p class="font-mono text-xs text-ink-faint">no failed events · every delivery verified, deduped, processed once</p>
     <% end %>
   </section>
 </div>

@@ -1,41 +1,40 @@
 <% content_for :title, "Refunds" %>
 
 <div class="rise">
-  <div class="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+  <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div>
-      <p class="eyebrow mb-2.5">The register</p>
-      <h1 class="font-display text-4xl tracking-tight text-ink">Refunds</h1>
-      <p class="mt-2 max-w-md text-sm text-ink-soft">
-        Every refund moves through <span class="font-mono text-xs">requested → processing → settled</span>.
-        Money is booked only when Stripe's signed webhook confirms it.
+      <h1 class="desk-title text-3xl text-ink">refunds</h1>
+      <p class="mt-2 max-w-lg text-sm text-ink-dim">
+        Every refund runs <span class="font-mono text-xs text-ink">requested → processing → settled</span>.
+        Money books only when Stripe's signed webhook confirms it.
       </p>
     </div>
-    <%= link_to "Issue a refund", new_refund_path, class: "btn btn-primary self-start sm:self-auto" %>
+    <%= link_to "issue refund", new_refund_path, class: "btn btn-primary self-start sm:self-auto" %>
   </div>
 
-  <div class="panel overflow-hidden">
+  <div class="panel overflow-x-auto">
     <table class="ledger-table">
       <thead>
         <tr>
-          <th>Refund</th>
-          <th>Charge</th>
-          <th class="text-right">Amount</th>
-          <th>Status</th>
-          <th class="text-right">Created</th>
+          <th>refund</th>
+          <th>charge</th>
+          <th class="text-right">amount</th>
+          <th>status</th>
+          <th class="text-right">created</th>
         </tr>
       </thead>
       <tbody>
         <% @refunds.each do |refund| %>
           <tr>
             <td><%= link_to "##{refund.id}", refund, class: "font-mono text-sm text-ink hover:text-credit" %></td>
-            <td><%= link_to refund.charge.stripe_payment_intent_id, refund.charge, class: "font-mono text-xs text-ink-soft hover:text-ink" %></td>
+            <td><%= link_to refund.charge.stripe_payment_intent_id, refund.charge, class: "font-mono text-xs text-ink-dim hover:text-ink" %></td>
             <td class="text-right"><%= amount(refund.amount_cents) %></td>
             <td><%= status_badge(refund.status) %></td>
             <td class="text-right font-mono text-xs text-ink-faint"><%= refund.created_at.strftime("%b %-d · %H:%M") %></td>
           </tr>
         <% end %>
         <% if @refunds.empty? %>
-          <tr><td colspan="5" class="px-4 py-16 text-center text-sm text-ink-faint">No refunds issued yet.</td></tr>
+          <tr><td colspan="5" class="px-4 py-16 text-center font-mono text-sm text-ink-faint">no refunds issued yet</td></tr>
         <% end %>
       </tbody>
     </table>

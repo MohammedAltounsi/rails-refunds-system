@@ -1,49 +1,46 @@
 <% content_for :title, "Refund ##{@refund.id}" %>
 
 <div class="rise mx-auto max-w-3xl">
-  <%= link_to "← Refunds", refunds_path, class: "text-sm text-ink-soft hover:text-ink" %>
+  <%= link_to "← refunds", refunds_path, class: "font-mono text-xs text-ink-dim hover:text-ink" %>
 
-  <div class="mt-5 mb-8 flex items-end justify-between gap-4">
-    <div>
-      <p class="eyebrow mb-2.5">Refund</p>
-      <h1 class="font-display text-4xl tracking-tight text-ink">#<%= @refund.id %></h1>
-    </div>
+  <div class="mt-4 mb-8 flex items-center justify-between gap-4">
+    <h1 class="desk-title text-3xl text-ink">refund #<%= @refund.id %></h1>
     <%= status_badge(@refund.status) %>
   </div>
 
-  <dl class="panel divide-y divide-line">
-    <div class="flex items-baseline justify-between gap-6 px-6 py-4">
-      <dt class="eyebrow">Amount</dt>
+  <dl class="panel">
+    <div class="readout px-6">
+      <dt class="meta">amount</dt>
       <dd class="text-lg"><%= amount(@refund.amount_cents) %></dd>
     </div>
-    <div class="flex items-baseline justify-between gap-6 px-6 py-4">
-      <dt class="eyebrow">Charge</dt>
+    <div class="readout px-6">
+      <dt class="meta">charge</dt>
       <dd><%= link_to @refund.charge.stripe_payment_intent_id, @refund.charge, class: "font-mono text-sm text-ink hover:text-credit" %></dd>
     </div>
-    <div class="flex items-baseline justify-between gap-6 px-6 py-4">
-      <dt class="eyebrow">Idempotency key</dt>
-      <dd class="font-mono text-xs text-ink-soft break-all text-right"><%= @refund.idempotency_key %></dd>
+    <div class="readout px-6">
+      <dt class="meta">idempotency key</dt>
+      <dd class="font-mono text-xs text-ink-dim break-all text-right"><%= @refund.idempotency_key %></dd>
     </div>
-    <div class="flex items-baseline justify-between gap-6 px-6 py-4">
-      <dt class="eyebrow">Stripe refund ID</dt>
-      <dd class="font-mono text-xs text-ink-soft"><%= @refund.stripe_refund_id || "—" %></dd>
+    <div class="readout px-6">
+      <dt class="meta">stripe refund id</dt>
+      <dd class="font-mono text-xs text-ink-dim"><%= @refund.stripe_refund_id || "—" %></dd>
     </div>
     <% if @refund.failure_reason.present? %>
-      <div class="flex items-baseline justify-between gap-6 px-6 py-4">
-        <dt class="eyebrow">Failure reason</dt>
+      <div class="readout px-6">
+        <dt class="meta">failure reason</dt>
         <dd class="text-sm text-debit"><%= @refund.failure_reason %></dd>
       </div>
     <% end %>
-    <div class="flex items-baseline justify-between gap-6 px-6 py-4">
-      <dt class="eyebrow">Created</dt>
-      <dd class="font-mono text-xs text-ink-soft"><%= @refund.created_at.strftime("%b %-d, %Y · %H:%M") %></dd>
+    <div class="readout px-6">
+      <dt class="meta">created</dt>
+      <dd class="font-mono text-xs text-ink-dim"><%= @refund.created_at.strftime("%b %-d, %Y · %H:%M") %></dd>
     </div>
   </dl>
 
   <% if @refund.status == "settled" %>
     <div class="mt-6 flex items-center gap-4">
-      <%= button_to "Replay settlement webhook", replay_refund_path(@refund), method: :post, class: "btn btn-ghost" %>
-      <p class="text-xs text-ink-soft">Re-delivers Stripe's webhook. The ledger stays booked exactly once, a live proof of idempotency.</p>
+      <%= button_to "replay settlement webhook", replay_refund_path(@refund), method: :post, class: "btn btn-ghost" %>
+      <p class="text-xs text-ink-dim">Re-delivers Stripe's webhook. The ledger stays booked exactly once, a live proof of idempotency.</p>
     </div>
   <% end %>
 </div>

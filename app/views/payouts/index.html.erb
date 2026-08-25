@@ -1,41 +1,40 @@
 <% content_for :title, "Payouts" %>
 
 <div class="rise">
-  <div class="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+  <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div>
-      <p class="eyebrow mb-2.5">The disbursement register</p>
-      <h1 class="font-display text-4xl tracking-tight text-ink">Payouts</h1>
-      <p class="mt-2 max-w-md text-sm text-ink-soft">
+      <h1 class="desk-title text-3xl text-ink">payouts</h1>
+      <p class="mt-2 max-w-lg text-sm text-ink-dim">
         Money out to a payee. Requesting a payout accrues the liability; the cash
-        is disbursed only when a verified <span class="font-mono text-xs">payout.paid</span> webhook confirms it.
+        disburses only when a signed <span class="font-mono text-xs text-ink">payout.paid</span> webhook confirms it.
       </p>
     </div>
-    <%= link_to "Issue a payout", new_payout_path, class: "btn btn-primary self-start sm:self-auto" %>
+    <%= link_to "issue payout", new_payout_path, class: "btn btn-primary self-start sm:self-auto" %>
   </div>
 
-  <div class="panel overflow-hidden">
+  <div class="panel overflow-x-auto">
     <table class="ledger-table">
       <thead>
         <tr>
-          <th>Payout</th>
-          <th>Payee</th>
-          <th class="text-right">Amount</th>
-          <th>Status</th>
-          <th class="text-right">Created</th>
+          <th>payout</th>
+          <th>payee</th>
+          <th class="text-right">amount</th>
+          <th>status</th>
+          <th class="text-right">created</th>
         </tr>
       </thead>
       <tbody>
         <% @payouts.each do |payout| %>
           <tr>
             <td><%= link_to "##{payout.id}", payout, class: "font-mono text-sm text-ink hover:text-credit" %></td>
-            <td class="text-sm text-ink-soft"><%= payout.payee %></td>
+            <td class="text-sm text-ink-dim"><%= payout.payee %></td>
             <td class="text-right"><%= amount(payout.amount_cents) %></td>
             <td><%= status_badge(payout.status) %></td>
             <td class="text-right font-mono text-xs text-ink-faint"><%= payout.created_at.strftime("%b %-d · %H:%M") %></td>
           </tr>
         <% end %>
         <% if @payouts.empty? %>
-          <tr><td colspan="5" class="px-4 py-16 text-center text-sm text-ink-faint">No payouts issued yet.</td></tr>
+          <tr><td colspan="5" class="px-4 py-16 text-center font-mono text-sm text-ink-faint">no payouts issued yet</td></tr>
         <% end %>
       </tbody>
     </table>

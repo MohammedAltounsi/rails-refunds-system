@@ -1,10 +1,9 @@
 <% content_for :title, "Issue a payout" %>
 
 <div class="rise mx-auto max-w-2xl">
-  <div class="mb-10">
-    <p class="eyebrow mb-2.5">Outbound</p>
-    <h1 class="font-display text-4xl tracking-tight text-ink">Issue a payout</h1>
-    <p class="mt-2 text-sm text-ink-soft">
+  <div class="mb-8">
+    <h1 class="desk-title text-3xl text-ink">issue payout</h1>
+    <p class="mt-2 text-sm text-ink-dim">
       Requesting a payout accrues the liability in the same transaction the row
       is created, so the books never show a payout without a matching amount owed.
     </p>
@@ -12,27 +11,26 @@
 
   <%= form_with url: payouts_path, method: :post, class: "panel space-y-6 p-7" do %>
     <div>
-      <label class="eyebrow mb-2 block" for="payee">Payee</label>
-      <input type="text" name="payee" id="payee" required class="field"
-             placeholder="vendor or marketplace seller">
+      <label class="meta mb-2 block" for="payee">payee</label>
+      <input type="text" name="payee" id="payee" required class="field" placeholder="vendor or marketplace seller">
     </div>
 
     <div>
-      <label class="eyebrow mb-2 block" for="amount_cents">Amount <span class="normal-case tracking-normal text-ink-faint">(halalas)</span></label>
+      <label class="meta mb-2 block" for="amount_cents">amount <span class="text-ink-faint">(halalas)</span></label>
       <input type="number" name="amount_cents" id="amount_cents" min="1" required class="field font-mono">
-      <p class="mt-2 text-xs text-ink-soft">Integer minor units. 100 halalas = SAR 1.00.</p>
+      <p class="mt-2 font-mono text-xs text-ink-faint">integer minor units · 100 halalas = SAR 1.00</p>
     </div>
 
     <div>
-      <label class="eyebrow mb-2 block" for="idempotency_key">Idempotency key <span class="normal-case tracking-normal text-ink-faint">(optional)</span></label>
+      <label class="meta mb-2 block" for="idempotency_key">idempotency key <span class="text-ink-faint">(optional)</span></label>
       <input type="text" name="idempotency_key" id="idempotency_key" class="field font-mono text-sm"
              placeholder="a stable key from your own retry logic">
-      <p class="mt-2 text-xs text-ink-soft">Leave blank to generate one. The same key twice pays out once.</p>
+      <p class="mt-2 text-xs text-ink-dim">Leave blank to generate one. The same key twice pays out once.</p>
     </div>
 
     <div class="flex items-center gap-4 border-t border-line pt-6">
-      <button type="submit" class="btn btn-primary">Issue payout</button>
-      <%= link_to "Cancel", payouts_path, class: "text-sm text-ink-soft hover:text-ink" %>
+      <button type="submit" class="btn btn-primary">issue payout</button>
+      <%= link_to "cancel", payouts_path, class: "font-mono text-xs text-ink-dim hover:text-ink" %>
     </div>
   <% end %>
 </div>

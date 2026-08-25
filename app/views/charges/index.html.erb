@@ -1,35 +1,34 @@
 <% content_for :title, "Charges" %>
 
 <div class="rise">
-  <div class="mb-10">
-    <p class="eyebrow mb-2.5">What we can refund against</p>
-    <h1 class="font-display text-4xl tracking-tight text-ink">Charges</h1>
-    <p class="mt-2 max-w-md text-sm text-ink-soft">
+  <div class="mb-8">
+    <h1 class="desk-title text-3xl text-ink">charges</h1>
+    <p class="mt-2 max-w-lg text-sm text-ink-dim">
       Each charge is a captured payment. The sum of its refunds can never exceed what it captured.
     </p>
   </div>
 
-  <div class="panel overflow-hidden">
+  <div class="panel overflow-x-auto">
     <table class="ledger-table">
       <thead>
         <tr>
-          <th>Payment intent</th>
-          <th class="text-right">Captured</th>
-          <th class="text-right">Refunded</th>
-          <th class="text-right">Refundable</th>
+          <th>payment intent</th>
+          <th class="text-right">captured</th>
+          <th class="text-right">refunded</th>
+          <th class="text-right">refundable</th>
         </tr>
       </thead>
       <tbody>
         <% @charges.each do |charge| %>
           <tr>
             <td><%= link_to charge.stripe_payment_intent_id, charge, class: "font-mono text-xs text-ink hover:text-credit" %></td>
-            <td class="text-right font-mono text-sm text-ink-soft"><%= money(charge.amount_cents) %></td>
-            <td class="text-right font-mono text-sm text-ink-soft"><%= money(charge.refunded_cents) %></td>
+            <td class="text-right font-mono text-sm text-ink-dim"><%= money(charge.amount_cents) %></td>
+            <td class="text-right font-mono text-sm text-ink-dim"><%= money(charge.refunded_cents) %></td>
             <td class="text-right"><%= amount(charge.refundable_cents) %></td>
           </tr>
         <% end %>
         <% if @charges.empty? %>
-          <tr><td colspan="4" class="px-4 py-16 text-center text-sm text-ink-faint">No charges yet.</td></tr>
+          <tr><td colspan="4" class="px-4 py-16 text-center font-mono text-sm text-ink-faint">no charges yet</td></tr>
         <% end %>
       </tbody>
     </table>
