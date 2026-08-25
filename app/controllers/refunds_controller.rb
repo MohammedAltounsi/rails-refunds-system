@@ -1,5 +1,5 @@
 class RefundsController < ApplicationController
-  before_action :require_operator!, only: %i[create replay]
+  before_action :require_operator!, only: %i[create replay simulate]
 
   def index
     @refunds = Refund.includes(:charge).order(created_at: :desc).limit(50)
