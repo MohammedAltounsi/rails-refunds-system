@@ -23,12 +23,13 @@ module RailsRefundsSystem
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1
 
-    # Demo mode (ON by default; set DEMO_MODE=false to turn it off). It unlocks
-    # the "play Stripe's webhook" affordances so a visitor can drive a refund or
-    # payout through its whole lifecycle by clicking — no Stripe account wired.
-    # With it OFF, a refund settles ONLY on a real signature-verified webhook,
-    # exactly as production must behave; the demo buttons and routes go away.
-    config.x.demo_mode = ENV["DEMO_MODE"] != "false"
+    # Demo mode (OFF by default; the public showcase opts in with DEMO_MODE=true).
+    # It unlocks the "play Stripe's webhook" affordances so a visitor can drive a
+    # refund or payout through its whole lifecycle by clicking, no Stripe account
+    # wired. Default-off is deliberate: a real deployment that forgets to set
+    # anything settles money ONLY on a signature-verified webhook, and the demo
+    # buttons and routes never exist. You opt IN to the shortcuts, never out.
+    config.x.demo_mode = ENV["DEMO_MODE"] == "true"
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.

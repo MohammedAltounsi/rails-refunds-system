@@ -1,5 +1,5 @@
 class PayoutsController < ApplicationController
-  before_action :require_operator!, only: :create
+  before_action :require_operator!, only: %i[create simulate]
 
   def index
     @payouts = Payout.order(created_at: :desc).limit(50)

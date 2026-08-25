@@ -7,7 +7,7 @@ module RefundGateway
     # Demo seam: no Stripe account is wired on the public showcase, so stand in
     # for Stripe's "refund accepted" response and let the refund reach
     # `processing`. It still settles ONLY when the webhook is played (or a real
-    # signed webhook arrives) — never here. Off in production (DEMO_MODE=false).
+    # signed webhook arrives) — never here. Off by default; the showcase opts in.
     if Rails.configuration.x.demo_mode
       return Struct.new(:id).new("re_demo_#{refund.idempotency_key}")
     end
