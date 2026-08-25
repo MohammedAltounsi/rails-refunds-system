@@ -40,8 +40,9 @@ Rails.application.configure do
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
 
-  # Replace the default in-process memory cache store with a durable alternative.
-  config.cache_store = :solid_cache_store
+  # In-process memory cache. This app caches nothing that holds money, so a
+  # durable store (Solid Cache) would add a database table for no benefit.
+  config.cache_store = :memory_store
 
   # No background jobs in this app (refunds book on the webhook request itself);
   # :async is the lightest adapter and needs no separate worker process/memory.
