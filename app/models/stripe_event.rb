@@ -12,6 +12,12 @@ class StripeEvent < ApplicationRecord
 
   scope :failed, -> { where(status: "failed") }
 
+  # Events that were recorded but never reached `processed` — a settlement that
+  # a crash dropped, or a handler that raised. The recovery sweep re-runs these.
+  scope :reprocessable, ->(older_than: 2.minutes) {
+    where(status: %w[received failed]).where(created_at: ..older_than.ago)
+  }
+
   def self.record(event, payload)
     create!(event_id: event.id, event_type: event.type, payload: payload)
   rescue ActiveRecord::RecordNotUnique

@@ -1,6 +1,7 @@
 desc "Reconcile the ledger against Stripe; exits non-zero on any drift (CI-friendly)"
 task reconcile: :environment do
   r = ReconciliationService.run
+  ReconciliationRun.record!(r)   # persist a row so drift has a timeline
 
   puts ""
   puts "  REFUNDS & PAYOUTS — LEDGER RECONCILIATION"

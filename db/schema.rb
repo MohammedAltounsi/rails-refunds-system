@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_24_111923) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_25_120100) do
   create_table "accounts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -35,6 +35,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_111923) do
     t.index ["idempotency_key"], name: "index_entries_on_idempotency_key", unique: true
   end
 
+  create_table "payouts", force: :cascade do |t|
+    t.integer "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "sar", null: false
+    t.string "failure_reason"
+    t.string "idempotency_key", null: false
+    t.string "payee", null: false
+    t.string "status", default: "requested", null: false
+    t.string "stripe_payout_id"
+    t.datetime "updated_at", null: false
+    t.index ["idempotency_key"], name: "index_payouts_on_idempotency_key", unique: true
+    t.index ["stripe_payout_id"], name: "index_payouts_on_stripe_payout_id", unique: true
+  end
+
   create_table "postings", force: :cascade do |t|
     t.integer "account_id", null: false
     t.integer "amount_cents", null: false
@@ -43,6 +57,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_111923) do
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_postings_on_account_id"
     t.index ["entry_id"], name: "index_postings_on_entry_id"
+  end
+
+  create_table "reconciliation_runs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "global_sum_cents", default: 0, null: false
+    t.boolean "invariants_ok", default: true, null: false
+    t.integer "matched", default: 0, null: false
+    t.integer "mismatched_count", default: 0, null: false
+    t.integer "missing_count", default: 0, null: false
+    t.integer "orphan_count", default: 0, null: false
+    t.string "status", null: false
+    t.integer "stripe_count", default: 0, null: false
+    t.index ["created_at"], name: "index_reconciliation_runs_on_created_at"
   end
 
   create_table "refunds", force: :cascade do |t|

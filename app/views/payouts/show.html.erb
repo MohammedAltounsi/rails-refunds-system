@@ -1,0 +1,42 @@
+<% content_for :title, "Payout ##{@payout.id}" %>
+
+<div class="rise mx-auto max-w-3xl">
+  <%= link_to "← Payouts", payouts_path, class: "text-sm text-ink-soft hover:text-ink" %>
+
+  <div class="mt-5 mb-8 flex items-end justify-between gap-4">
+    <div>
+      <p class="eyebrow mb-2.5">Payout</p>
+      <h1 class="font-display text-4xl tracking-tight text-ink">#<%= @payout.id %></h1>
+    </div>
+    <%= status_badge(@payout.status) %>
+  </div>
+
+  <dl class="panel divide-y divide-line">
+    <div class="flex items-baseline justify-between gap-6 px-6 py-4">
+      <dt class="eyebrow">Amount</dt>
+      <dd class="text-lg"><%= amount(@payout.amount_cents) %></dd>
+    </div>
+    <div class="flex items-baseline justify-between gap-6 px-6 py-4">
+      <dt class="eyebrow">Payee</dt>
+      <dd class="text-sm text-ink"><%= @payout.payee %></dd>
+    </div>
+    <div class="flex items-baseline justify-between gap-6 px-6 py-4">
+      <dt class="eyebrow">Idempotency key</dt>
+      <dd class="font-mono text-xs text-ink-soft break-all text-right"><%= @payout.idempotency_key %></dd>
+    </div>
+    <div class="flex items-baseline justify-between gap-6 px-6 py-4">
+      <dt class="eyebrow">Stripe payout ID</dt>
+      <dd class="font-mono text-xs text-ink-soft"><%= @payout.stripe_payout_id || "—" %></dd>
+    </div>
+    <% if @payout.failure_reason.present? %>
+      <div class="flex items-baseline justify-between gap-6 px-6 py-4">
+        <dt class="eyebrow">Failure reason</dt>
+        <dd class="text-sm text-debit"><%= @payout.failure_reason %></dd>
+      </div>
+    <% end %>
+    <div class="flex items-baseline justify-between gap-6 px-6 py-4">
+      <dt class="eyebrow">Created</dt>
+      <dd class="font-mono text-xs text-ink-soft"><%= @payout.created_at.strftime("%b %-d, %Y · %H:%M") %></dd>
+    </div>
+  </dl>
+</div>

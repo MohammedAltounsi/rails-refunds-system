@@ -96,6 +96,30 @@
     </div>
   <% end %>
 
+  <% if @recent_runs.any? %>
+    <section class="mb-12">
+      <h2 class="eyebrow mb-3">Reconciliation history</h2>
+      <p class="mb-3 text-xs text-ink-faint">Every run is stored, so drift has a timeline. A scheduled job (or each page view) records one.</p>
+      <div class="panel overflow-hidden">
+        <table class="ledger-table">
+          <thead><tr><th>When</th><th>Status</th><th class="text-right">Matched</th><th class="text-right">Missing</th><th class="text-right">Mismatch</th><th class="text-right">Orphan</th></tr></thead>
+          <tbody>
+            <% @recent_runs.each do |run| %>
+              <tr>
+                <td class="font-mono text-xs text-ink-soft"><%= run.created_at.strftime("%b %-d · %H:%M") %></td>
+                <td><span class="chip <%= run.clean? ? 'chip-settled' : run.unreachable? ? 'chip-processing' : 'chip-failed' %>"><%= run.status %></span></td>
+                <td class="text-right font-mono text-xs"><%= run.matched %></td>
+                <td class="text-right font-mono text-xs <%= run.missing_count.zero? ? 'text-ink-faint' : 'text-debit' %>"><%= run.missing_count %></td>
+                <td class="text-right font-mono text-xs <%= run.mismatched_count.zero? ? 'text-ink-faint' : 'text-debit' %>"><%= run.mismatched_count %></td>
+                <td class="text-right font-mono text-xs <%= run.orphan_count.zero? ? 'text-ink-faint' : 'text-debit' %>"><%= run.orphan_count %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  <% end %>
+
   <section>
     <h2 class="eyebrow mb-3">Webhook inbox</h2>
     <div class="mb-4 flex flex-wrap gap-2">
