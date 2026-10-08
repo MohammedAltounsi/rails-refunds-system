@@ -18,8 +18,8 @@ Entry "charge captured pi_123"        Entry "refund 1 for charge pi_123"
                                0                                      0
 ```
 
-Every entry sums to zero. A refund's reversal is the mirror image of the
-charge it partially undoes.
+Every entry sums to zero. A refund's reversal uses the same accounts as the
+charge, with the signs flipped.
 
 ## Decisions and trade-offs
 
@@ -30,7 +30,7 @@ failed`, `processing → settled | failed`, and nothing leaves `settled` or
 `failed`. `transition_to!` raises `Refund::InvalidTransition` for anything
 else.
 
-- **Why:** a refund's status is a contract with the ledger. `requested →
+- **Why:** the ledger relies on a refund's status. `requested →
   settled` (skipping `processing`) would mean booking money for a Stripe call
   that may never have happened. `settled → anything` would mean un-reversing
   a reversal that already happened. An explicit allow-list turns any illegal
@@ -56,15 +56,15 @@ re-checks the same rule at COMMIT, independent of the app.
   promise to Stripe. Counting only `settled` refunds against the cap would let
   the same race happen one layer up: two refunds could both be issued to
   Stripe before either settles, and both could succeed.
-- **Why the trigger too:** the lock only holds if every code path takes it.
-  The trigger is the invariant made a property of the database. It would
+- **Why the trigger too:** the lock only helps if every code path takes it.
+  The trigger enforces the same rule inside the database. It would
   catch a future caller that constructs a `Refund` directly, bypassing
   `Refund.request!` entirely.
 - **Trade-off:** a global-per-charge lock serializes refund requests against
   one charge. For a single charge's own refunds, rarely more than a handful,
   that is correct and not a throughput concern.
 
-### 3. Money is booked on the webhook, never on the refund's creation
+### 3. Money is booked when the webhook arrives
 
 Creating a `Refund` row and calling `RefundGateway.create` moves nothing in
 the ledger. `Refund#settle!`, called only from a signature-verified
@@ -88,9 +88,9 @@ Every Stripe event is written to `stripe_events`, deduped on a unique
 - **Why:** Stripe delivers at-least-once. Deduping only on the refund id
   covers money but gives no audit trail for other event types and no way to
   tell a genuinely-new event from a redelivery before processing it.
-- **Trade-off:** an extra write per event. Negligible next to the safety.
+- **Trade-off:** one extra write per event, which is cheap.
 
-### 5. Idempotency is enforced at the database, not just checked in code
+### 5. Idempotency is enforced by unique indexes
 
 Both `Refund.request!` (keyed on a caller-supplied idempotency key) and
 `Ledger.post!` (keyed on `refund-settle:<id>`) do a fast-path existence check,
@@ -101,22 +101,22 @@ race.
   same key can both pass the check and both attempt to insert. The unique
   index is the real guard: the database lets exactly one win, the loser
   catches the violation and returns the winner's row.
-- **At scale:** unchanged. This is the pattern; it holds under real
-  concurrency, and it's the same one project 1 uses for wallet top-ups.
+- **At scale:** unchanged. This works under real concurrency, and it's the
+  same approach project 1 uses for wallet top-ups.
 
-### 6. Balances are derived, never stored
+### 6. Balances are computed from postings
 
 `Account#balance_cents` sums postings on every read. There is no `balance`
 column.
 
-- **Why:** a stored balance is a second source of truth that can drift from
-  the log. Deriving it means it cannot drift by construction, the same
-  reasoning as project 1's wallet.
+- **Why:** a stored balance is a second copy of the data, and it can drift
+  from the log. A balance computed from the log can't drift. Project 1's
+  wallet works the same way.
 - **At scale:** add a cached balance projection updated in the same
   transaction as the posting, reconciled periodically against the log. The
   log stays authoritative.
 
-### 7. Reconciliation is a first-class feature
+### 7. Reconciliation is built in
 
 `ReconciliationService` compares settled refunds against Stripe's list of
 succeeded refunds and reports three failure modes: a Stripe refund the
@@ -125,9 +125,8 @@ a settled reversal with no matching Stripe refund (money the ledger moved
 that Stripe has no record of). Plus the two structural invariants: every entry
 balances, and the global sum is zero.
 
-- **Why:** webhooks get dropped and code has bugs. A ledger that can't be
-  checked against the processor that actually moves the money is a ledger you
-  have to trust blindly.
+- **Why:** webhooks get dropped and code has bugs. Without a check against
+  Stripe, there is no way to know when the ledger is wrong.
 - **At scale:** run it continuously over a rolling window instead of a full
   list-and-diff, store each run, and alert on the first non-zero drift.
 
@@ -137,12 +136,12 @@ Every amount is an integer count of halalas. No floats anywhere in the money
 path; the only division by 100 is display formatting.
 
 - **Why:** floating point cannot represent most decimal money values exactly.
-  Integer minor units are exact. Standard practice; not worth debating.
+  Integer minor units are exact. This is standard practice.
 
-### 9. The webhook boundary is convergent, the internal FSM is strict
+### 9. The webhook handler tolerates event order; internal code uses the strict FSM
 
-The strict state machine (#1) is right for our own code, but wrong at the
-webhook edge. Stripe delivers events at-least-once and out of order: a
+The strict state machine (#1) works for our own code, but it doesn't fit the
+webhook handler. Stripe delivers events at-least-once and out of order: a
 `succeeded` can arrive before we recorded `processing`, or after a crash left
 the row `failed`. Raising there would turn Stripe's retries into an infinite
 500-loop and never book money Stripe already moved.
@@ -151,15 +150,15 @@ So the webhook calls convergent, ordering-tolerant methods
 (`apply_stripe_succeeded!`, `apply_stripe_failed!`) instead of the strict
 `settle!`/`fail!`. A verified `succeeded` is authoritative: converge to settled
 from any non-settled state and book the reversal exactly once (the ledger key
-guarantees it). A late `failed` after a settle is ignored, never un-booking
-money. The strict FSM stays, and stays tested, for internal callers.
+guarantees it). A late `failed` after a settle is ignored, so booked money
+stays booked. The strict FSM stays, and stays tested, for internal callers.
 
-### 10. Settlement stays synchronous; a sweep heals what drops
+### 10. Settlement runs synchronously, and a sweep job re-runs dropped events
 
 Settlement is not offloaded to a background job. The only async adapter that
 fits a 512 MB single-worker instance is in-memory, which is lost on restart, so
-offloading would trade Stripe's durable synchronous retry for a queue that can
-silently drop money. Instead the ledger write runs inline (Stripe retries on a
+moving settlement to a job would replace Stripe's retries with a queue that
+can lose a settlement without any error. Instead the ledger write runs inline (Stripe retries on a
 500), and `ReprocessStuckStripeEventsJob` sweeps any inbox event still
 unprocessed and re-runs it. Idempotent handlers make the replay safe.
 

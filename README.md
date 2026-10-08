@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/readme/hero.svg" width="100%" alt="refunds &amp; payouts: a refund moves requested, processing, settled or failed, and settling posts one balancing ledger entry that sums to SAR 0.00">
+<img src="assets/readme/hero.svg" width="100%" alt="rails-refunds-system: a refund goes from requested to processing to settled, or to failed. The ledger entry for refund 4 moves 25.00 from revenue:charges to stripe:cash, and the sum is SAR 0.00.">
 
 [![Live demo](https://img.shields.io/badge/Live_demo-online-2ea44f?logo=render&logoColor=white)](https://rails-refunds-system.onrender.com)
 [![CI](https://github.com/MohammedAltounsi/rails-refunds-system/actions/workflows/ci.yml/badge.svg)](https://github.com/MohammedAltounsi/rails-refunds-system/actions/workflows/ci.yml)
@@ -10,26 +10,30 @@
 
 ### [▶ Open the live demo](https://rails-refunds-system.onrender.com)
 
-Issue a refund, replay the settlement webhook, and watch the ledger stay
-balanced. No setup, no Stripe account, no real money.
+In the demo you can issue a refund, replay the settlement webhook, and look
+at the ledger. It runs in Stripe test mode, so you don't need a Stripe account.
 
-<img src="docs/screenshot-ledger.png" alt="The live demo's ledger page: every posting ever sums to SAR 0.00, with refund reversals listed as balanced entries" width="820">
+<img src="docs/screenshot-ledger.png" alt="The ledger page in the live demo, showing account balances, a global sum of SAR 0.00, and refund reversals as ledger entries" width="820">
 
 </div>
 
 > [!NOTE]
 > The demo runs on Render's free tier. If it has been idle, the first load takes about a minute while it wakes up.
 
-This is the companion to
+A Rails 8 app that handles Stripe refunds and payouts. Each refund goes
+through a state machine, and every money movement is written to a double-entry
+ledger in PostgreSQL.
+
+It is the companion to
 [rails-stripe-wallet-ledger-sandbox](https://github.com/MohammedAltounsi/rails-stripe-wallet-ledger-sandbox),
-which builds the inbound half (capture a payment, credit a wallet). This repo
-builds the harder direction: giving money back correctly, exactly once, even
-when a refund is partial, a webhook is redelivered, or a request is retried.
+which handles incoming payments (capturing a payment and crediting a wallet).
+This repo handles money going back out. It covers partial refunds, redelivered
+webhooks and retried requests, and in each case the refund is booked once.
 
 ## How it works
 
-Every refund follows one state machine. Any transition not drawn here raises
-`Refund::InvalidTransition`.
+Refunds follow the state machine below. Any transition that isn't drawn here
+raises `Refund::InvalidTransition`.
 
 ```mermaid
 stateDiagram-v2
@@ -42,14 +46,15 @@ stateDiagram-v2
     settled --> [*]
     failed --> [*]
     note right of settled
-        posts the balancing ledger entry,
-        keyed on the refund, exactly once
+        posts the reversal entry once,
+        keyed on the refund id
     end note
 ```
 
-At the webhook edge the rules relax on purpose: Stripe delivers events out of
-order, so a verified success converges any unsettled refund to `settled` and
-books it once, and a stale failure never un-books a settled one.
+The webhook handler is less strict than the state machine. Stripe can deliver
+events out of order, so a verified success event moves any unsettled refund to
+`settled` and books it once. A failure event that arrives after the refund has
+settled is ignored, so it can't undo the booking.
 
 The request path:
 
@@ -72,9 +77,9 @@ flowchart LR
 3. Stripe's `refund.updated` webhook (signature-verified, deduped through the
    inbox) is the only thing that calls `Refund#settle!`, which flips the
    status to `settled` and posts the balancing reversal in one transaction.
-4. A redelivered webhook, a retried request, or a double-click all resolve to
-   money moving exactly once. The idempotency keys guarantee it, and the
-   database enforces it independently of the app.
+4. If a webhook is redelivered, a request is retried, or someone
+   double-clicks, the money still moves once. Idempotency keys handle this in
+   the app, and unique indexes and a trigger enforce it again in the database.
 
 For the reasoning behind each decision, see [ARCHITECTURE.md](ARCHITECTURE.md).
 For what to do when reconciliation reports drift, see [RUNBOOK.md](RUNBOOK.md).
@@ -82,9 +87,9 @@ For every route this app exposes, see [API.md](API.md).
 
 ## Run it
 
-The fastest way to see it work is the **[live demo](https://rails-refunds-system.onrender.com)**.
-It runs the full refund flow in the browser and replays webhooks for you, no
-install. To run it locally against real Stripe test webhooks:
+The quickest option is the [live demo](https://rails-refunds-system.onrender.com).
+It runs the whole refund flow in the browser and can replay webhooks for you.
+To run it locally against Stripe test webhooks:
 
 Needs Ruby 4.0+, the [Stripe CLI](https://stripe.com/docs/stripe-cli), and a Stripe test account.
 
@@ -107,23 +112,23 @@ bin/rails server
 stripe listen --forward-to localhost:3000/webhooks/stripe --events refund.updated,refund.failed
 ```
 
-Open <http://localhost:3000>. Issue a refund from `/refunds/new`, watch it
-settle when the webhook arrives, and check `/ledger` and `/reconciliation`.
+Open <http://localhost:3000> and issue a refund from `/refunds/new`. It
+settles when the webhook arrives. Then check `/ledger` and `/reconciliation`.
 
 ## What it does
 
 | Area | What happens | Where |
 |---|---|---|
 | Refund state machine | `requested → processing → settled \| failed`. Every other transition raises `Refund::InvalidTransition`. | `app/models/refund.rb` |
-| Over-refund guard | A charge can never be refunded past what it captured, even split across concurrent requests. Enforced in the app (a row lock on the charge) AND in Postgres (a deferred `CONSTRAINT TRIGGER`). | `Refund.request!`, `lib/tasks/db_constraints.rake` |
-| Idempotent reversals | Settling a refund posts a balancing ledger entry, keyed on the refund. A redelivered webhook reverses the money once. | `Refund#settle!`, `app/models/ledger.rb` |
-| Stripe refunds | Created via the Refund API (test mode). Money is booked only on a signature-verified `refund.updated` webhook, never on the synchronous create response. | `app/models/refund_gateway.rb`, `app/controllers/webhooks/stripe_controller.rb` |
-| Webhook inbox | Every Stripe event recorded once (unique `event_id`); a redelivery of an already-processed event is a no-op. | `app/models/stripe_event.rb` |
-| Payouts | The outbound-to-payee half: requesting a payout accrues the liability in the same transaction, and the cash is disbursed only on a verified `payout.paid` webhook. Same idempotency, state machine, and double-entry discipline as a refund. | `app/models/payout.rb` |
-| Reconciliation | Compares settled refunds against Stripe and reports dropped webhooks, amount mismatches, and orphan reversals. Every run is stored, so drift has a timeline; a Stripe outage reports `unreachable` instead of false orphans. | `app/services/reconciliation_service.rb`, `app/models/reconciliation_run.rb` |
-| Recovery sweep | Any webhook event stuck unprocessed (a crash-dropped settlement) is re-run and healed automatically. | `app/jobs/reprocess_stuck_stripe_events_job.rb` |
-| JSON API | `POST /api/refunds` honors an `Idempotency-Key` header exactly like Stripe's own API. Spec at `/openapi.yaml`. | `app/controllers/api/refunds_controller.rb` |
-| Audit + access | Every issued refund and payout records an actor and an action. Money-moving actions sit behind Basic auth when `ADMIN_PASSWORD` is set. | `app/models/audit_log.rb` |
+| Over-refund guard | The refunds on a charge can't add up to more than it captured, including when requests run at the same time. The app checks this under a row lock on the charge, and Postgres checks it again with a deferred `CONSTRAINT TRIGGER`. | `Refund.request!`, `lib/tasks/db_constraints.rake` |
+| Idempotent reversals | Settling a refund posts a reversal entry keyed on the refund. A redelivered webhook doesn't post a second one. | `Refund#settle!`, `app/models/ledger.rb` |
+| Stripe refunds | Created through the Refund API in test mode. The ledger entry is posted when a signature-verified `refund.updated` webhook arrives. The synchronous create response doesn't post anything. | `app/models/refund_gateway.rb`, `app/controllers/webhooks/stripe_controller.rb` |
+| Webhook inbox | Each Stripe event is stored once (unique `event_id`). Redelivering an event that was already processed does nothing. | `app/models/stripe_event.rb` |
+| Payouts | Payments out to a payee. Requesting a payout records the liability in the same transaction. The cash is paid out when a verified `payout.paid` webhook arrives. Payouts use the same idempotency keys, state machine and double-entry postings as refunds. | `app/models/payout.rb` |
+| Reconciliation | Compares settled refunds against Stripe and reports dropped webhooks, amount mismatches and orphan reversals. Each run is saved, so you can see when drift started. If Stripe is down, the run reports `unreachable` and doesn't flag orphans. | `app/services/reconciliation_service.rb`, `app/models/reconciliation_run.rb` |
+| Recovery sweep | A job re-runs any webhook event that is still unprocessed, for example a settlement interrupted by a crash. | `app/jobs/reprocess_stuck_stripe_events_job.rb` |
+| JSON API | `POST /api/refunds` accepts an `Idempotency-Key` header and handles it the same way Stripe's API does. The spec is at `/openapi.yaml`. | `app/controllers/api/refunds_controller.rb` |
+| Audit + access | Each refund and payout records who issued it and what they did. Actions that move money need Basic auth when `ADMIN_PASSWORD` is set. | `app/models/audit_log.rb` |
 
 ## Tests
 
@@ -135,25 +140,24 @@ Covers every legal and illegal state transition, the over-refund guard (both
 the app-level lock and, on Postgres, the DB trigger), idempotent reversals
 under a redelivered webhook, webhook signature verification, and each
 reconciliation drift mode. CI runs the suite on Postgres so the deferred
-triggers and row locks are actually exercised, plus Brakeman and
-bundler-audit on every push.
+triggers and row locks get tested, and it runs Brakeman and bundler-audit on
+every push.
 
 ## Security
 
 - Webhooks are signature-verified before any money moves.
 - Content Security Policy, `force_ssl` with HSTS, and a host allowlist.
 - rack-attack throttles the refund-issuing endpoint.
-- All secrets come from environment variables; the credentials key is never committed.
-- Brakeman and bundler-audit gate every push in CI.
+- Secrets come from environment variables. The credentials key is not in the repo.
+- CI fails a push if Brakeman or bundler-audit finds a problem.
 
 ## Author
 
 **Mohammed Altounsi**
 
-I build payment systems, e-commerce stores, and the web apps and marketing
-that run around them. This repo and its companion wallet ledger are one
-working example: money that stays correct under retries, race conditions, and
-webhook redelivery.
+I build payment systems and e-commerce stores, plus the web apps and
+marketing around them. This repo and the wallet ledger repo are examples of
+my payments work.
 
 - LinkedIn: <https://www.linkedin.com/in/mohammed-altounsi/>
 - GitHub: [@MohammedAltounsi](https://github.com/MohammedAltounsi)

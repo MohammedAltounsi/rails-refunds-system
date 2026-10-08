@@ -17,7 +17,7 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) otherwise.
   redelivered or early event can no longer 500-loop or leave money unbooked. The
   strict FSM is kept for internal callers.
 - Recovery sweep (`ReprocessStuckStripeEventsJob`, `rails stripe:reprocess`):
-  re-runs any inbox event stuck unprocessed, healing a crash-dropped settlement.
+  re-runs any inbox event still unprocessed, such as a settlement dropped by a crash.
 - Continuous reconciliation: every run is stored (`ReconciliationRun`) so drift
   has a timeline; a Stripe outage reports `unreachable` instead of false orphans;
   settled refunds with a null Stripe id are surfaced as orphans.
@@ -30,8 +30,8 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) otherwise.
 
 ### Fixed
 
-- rack-attack throttle store made explicit and honest (per-process memory, gated
-  on the single-worker deploy).
+- rack-attack throttle store made explicit (per-process memory, only enabled on
+  the single-worker deploy).
 - `bin/rails test` no longer requires the CSS toolchain; `docker-compose.yml`
   gives a local Postgres so the trigger and concurrency tests run locally too.
 

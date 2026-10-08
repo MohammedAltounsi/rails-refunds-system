@@ -1,8 +1,8 @@
 # Runbook
 
 What to do when `/reconciliation` or the webhook inbox reports a problem.
-This is the operational counterpart to [ARCHITECTURE.md](ARCHITECTURE.md),
-written for whoever is on call, not whoever is reading the code.
+[ARCHITECTURE.md](ARCHITECTURE.md) explains the design. This file is for
+whoever is on call.
 
 ## "Reconciliation shows drift"
 
@@ -29,7 +29,7 @@ failed silently before the inbox existed to catch it.
 
 This should be structurally impossible (`Refund#settle!` books exactly
 `amount_cents`, and Stripe was asked to refund exactly that). Treat it as a
-data integrity incident, not routine drift:
+data integrity incident:
 
 1. Pull the `Entry` for `refund-settle:<id>` and the Stripe refund object
    side by side.
@@ -50,7 +50,7 @@ security incident first, a bug second:
 
 ## "The over-refund trigger rejected a commit"
 
-This is the system working. It means app code (a bug, or a direct console
+The trigger is doing what it should. It means app code (a bug, or a direct console
 `Refund.create!`) tried to commit refunds exceeding what a charge captured.
 Read the `ActiveRecord::StatementInvalid` message. It names the charge and
 the amounts. Do not disable or loosen the trigger to unblock it; fix the

@@ -1,9 +1,9 @@
 # Design system: "The Desk"
 
-A dark payments terminal. Money is data on a trading desk: monospace figures in
-ruled columns on a near-black console, green for credit, amber for in-flight, red
-for what reverses. It uses no dashboard cards and no metric-tile hero. It looks
-like an instrument an operator watches.
+A dark UI for the operator screens. Amounts are monospace figures in ruled
+columns on a near-black background. Green marks credits, amber marks items in
+flight, and red marks reversals and failures. There are no dashboard cards and
+no metric-tile hero.
 
 Recorded from the built UI (`app/assets/tailwind/application.css`, `app/views/**`).
 
@@ -27,13 +27,13 @@ Tokens are Tailwind v4 `@theme` variables; utilities follow (`bg-bg`, `text-ink`
 | `debit` | `#ff6058` | failed, reversal, drift, negative |
 
 Money is colored by sign: positive `credit`, negative `debit`, zero `ink`
-(`ApplicationHelper#amount`). The color strategy is restrained: a near-black
-ground with one accent that owns the money semantics.
+(`ApplicationHelper#amount`). Apart from these three money colors, the
+palette is near-black with cool-tinted text.
 
 ## Type
 
 - **JetBrains Mono** carries every figure, id, account name, status chip, nav
-  tab, column header, and page title. The terminal's whole chrome is monospace.
+  tab, column header, and page title. All of the UI chrome is monospace.
 - **Archivo** carries descriptive sentences and form inputs.
 - Figures use `font-variant-numeric: tabular-nums` so columns align.
 - Page titles: `.desk-title` (mono, 500, lowercase, slight positive tracking).
@@ -54,22 +54,14 @@ ground with one accent that owns the money semantics.
 
 ## Motion
 
-One authored moment: rows **stream** onto the desk once on load (`.rise`,
-staggered exponential ease-out from an already-legible default), plus the
-masthead's blinking terminal **caret**. Both respect `prefers-reduced-motion`.
+Rows fade in once on page load (`.rise`, staggered exponential ease-out,
+starting from a readable state). The masthead has a blinking caret. Both are
+turned off under `prefers-reduced-motion`.
 
-## Rules honored
+## What the UI avoids
 
 - No eyebrow kickers, no gradient text, no glass decoration, no colored
   `border-left`, no metric-tile hero, no hard offset shadows.
-- Dark chosen from the use scene: an operator watching money move on a console.
+- Dark theme only.
 - Fonts self-served from Google Fonts; CSP allowlists `fonts.googleapis.com` /
   `fonts.gstatic.com`.
-
-## Note on finish
-
-The impeccable finish-reviewer subagent runs on screenshots; the browser pane in
-this environment could not be displayed for capture, so verification was done
-against the direction contract via computed styles (ground, fonts, chip and
-amount colors), the mechanical detector (`detect.mjs`, clean), and a mobile
-overflow / contrast check. Screenshot review is the one substituted step.
