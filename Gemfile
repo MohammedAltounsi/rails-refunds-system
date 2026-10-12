@@ -69,7 +69,7 @@ end
 # needed in production — this keeps it out of the Windows dev bundle, where the
 # native pg build needs libpq. It builds on Linux inside the Docker image.
 group :production do
-  gem "pg", "~> 1.5"
+  gem "pg", "~> 1.7"
 end
 
 group :test do
